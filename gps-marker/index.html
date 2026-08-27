@@ -66,7 +66,34 @@
     }
     .btn-export:active { background: #059669; transform: translateY(2px); }
 
-    /* Custom CSS for the popup delete button */
+    .btn-import {
+      background: #8b5cf6;
+      color: white;
+      box-shadow: 0 4px 6px rgba(139, 92, 246, 0.3);
+    }
+    .btn-import:active { background: #7c3aed; transform: translateY(2px); }
+
+    /* Custom CSS for the popup dropdown and delete button */
+    .popup-control-group {
+      margin-top: 8px;
+      margin-bottom: 8px;
+      text-align: left;
+    }
+    .popup-control-group label {
+      font-size: 13px;
+      font-weight: 600;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .condition-select {
+      width: 100%;
+      padding: 6px;
+      border-radius: 4px;
+      border: 1px solid #d1d5db;
+      font-size: 13px;
+      outline: none;
+    }
+
     .delete-btn {
       display: block;
       width: 100%;
@@ -145,9 +172,12 @@
   <div id="map"></div>
   
   <!-- Floating Controls -->
-  <div class="controls">
+  <div class="controls" style="flex-wrap: wrap; justify-content: center; width: 90%; max-width: 450px;">
     <button id="markBtn" class="action-btn btn-mark">Mark Point</button>
     <button id="exportBtn" class="action-btn btn-export">Export CSV</button>
+    <button id="importBtn" class="action-btn btn-import">Import CSV</button>
+    <!-- Hidden file input for CSV import -->
+    <input type="file" id="csvInput" accept=".csv" style="display: none;" />
   </div>
 
   <!-- Custom Notification Modal (replaces alert) -->
@@ -206,7 +236,7 @@
       }
 
       // Bind a permanent tooltip to show distance above the marker
-      marker.bindTooltip(`Distance: ${distText}`, { 
+      marker.bindTooltip(distText, { 
         permanent: true, 
         direction: 'top', 
         className: 'dist-tooltip',
@@ -216,9 +246,33 @@
       // We must construct the popup content dynamically via DOM elements 
       // so we can attach a reliable click event listener to the button.
       const popupDiv = document.createElement('div');
+      
+      // Ensure condition defaults to 'Terang' for old points
+      const currentCondition = point.condition || 'Terang';
+      
       popupDiv.innerHTML = `
         <div style="font-size: 14px; margin-bottom: 5px;"><strong>Marked at:</strong><br>${point.time}</div>
+        <div class="popup-control-group">
+          <label>Light Condition:</label>
+          <select class="condition-select">
+            <option value="Terang" ${currentCondition === 'Terang' ? 'selected' : ''}>Terang</option>
+            <option value="Redup" ${currentCondition === 'Redup' ? 'selected' : ''}>Redup</option>
+            <option value="Gelap" ${currentCondition === 'Gelap' ? 'selected' : ''}>Gelap</option>
+          </select>
+        </div>
       `;
+      
+      // Handle dropdown changes
+      const selectEl = popupDiv.querySelector('.condition-select');
+      selectEl.onchange = function(e) {
+        point.condition = e.target.value;
+        // Update the point in our array and save to local storage
+        const idx = points.findIndex(p => p.id === point.id);
+        if (idx !== -1) {
+          points[idx].condition = point.condition;
+          localStorage.setItem('mapPoints', JSON.stringify(points));
+        }
+      };
       
       const deleteBtn = document.createElement('button');
       deleteBtn.className = 'delete-btn';
@@ -291,10 +345,10 @@
         
         // Format to meters if < 1km, otherwise kilometers
         const distText = distance < 1000 
-          ? distance.toFixed(1) + 'm' 
-          : (distance / 1000).toFixed(2) + 'km';
+          ? Math.round(distance) + ' m' 
+          : (distance / 1000).toFixed(2) + ' km';
           
-        marker.setTooltipContent(distText);
+        marker.setTooltipContent(`Distance: ${distText}`);
       });
     });
 
@@ -316,7 +370,8 @@
         id: Date.now(), // unique identifier for deletion
         lat: currentPos.lat, 
         lng: currentPos.lng, 
-        time: new Date().toLocaleString() 
+        time: new Date().toLocaleString(),
+        condition: 'Gelap' // Default light condition
       };
       
       // Save data
@@ -342,9 +397,10 @@
       }
       
       // Construct CSV string
-      let csvContent = "No,Latitude,Longitude,Time\n";
+      let csvContent = "No,Latitude,Longitude,Time,Condition\n";
       points.forEach((p, i) => {
-        csvContent += `${i},${p.lat},${p.lng},"${p.time}"\n`;
+        const condition = p.condition || 'Gelap';
+        csvContent += `${i},${p.lat},${p.lng},"${p.time}",${condition}\n`;
       });
       
       // Trigger download
@@ -357,6 +413,75 @@
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+    };
+
+    // Handle "Import CSV" button click
+    document.getElementById('importBtn').onclick = () => {
+      document.getElementById('csvInput').click();
+    };
+
+    // Handle File Input change (CSV Parsing)
+    document.getElementById('csvInput').onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const text = event.target.result;
+          const lines = text.trim().split('\n');
+          
+          if (lines.length < 2) {
+            showModal('Error', 'The CSV file appears to be empty or invalid.');
+            return;
+          }
+
+          let newPointsCount = 0;
+
+          // Skip header (i=1)
+          for (let i = 1; i < lines.length; i++) {
+            // Split by comma, but intelligently ignore commas inside quotes (for dates)
+            const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+            
+            if (cols.length >= 4) {
+              const lat = parseFloat(cols[1]);
+              const lng = parseFloat(cols[2]);
+              // Remove surrounding quotes from time if they exist
+              const time = cols[3].replace(/^"|"$/g, '').trim();
+              // Get condition, fallback to 'Terang' if column doesn't exist
+              const condition = cols[4] ? cols[4].replace(/^"|"$/g, '').trim() : 'Terang';
+
+              if (!isNaN(lat) && !isNaN(lng)) {
+                const newId = Date.now() + Math.floor(Math.random() * 10000); // Ensure unique ID
+                const newPoint = { id: newId, lat, lng, time, condition };
+                
+                points.push(newPoint);
+                renderPoint(newPoint);
+                newPointsCount++;
+              }
+            }
+          }
+
+          if (newPointsCount > 0) {
+            localStorage.setItem('mapPoints', JSON.stringify(points));
+            showModal('Success', `Successfully imported ${newPointsCount} points!`);
+            
+            // Refocus map bounds to show new points if desired (optional)
+            // const group = new L.featureGroup(Object.values(activeMarkers));
+            // map.fitBounds(group.getBounds());
+          } else {
+            showModal('Warning', 'No valid coordinates found in the CSV.');
+          }
+        } catch (err) {
+          console.error(err);
+          showModal('Error', 'Failed to parse the CSV file.');
+        }
+        
+        // Reset input so the exact same file can be selected again if needed
+        e.target.value = '';
+      };
+      
+      reader.readAsText(file);
     };
   </script>
 </body>
