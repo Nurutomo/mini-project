@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Live Location Tracker</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  
+  <style>
+    /* Reset and ensure full screen layout */
+    body, html { 
+      margin: 0; 
+      padding: 0; 
+      height: 100%; 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+      background-color: #f3f4f6;
+    }
+    
+    /* Map container takes up full screen */
+    #map { 
+      height: 100%; 
+      width: 100%; 
+      z-index: 10; 
+    }
+    
+    /* Control buttons container at the bottom */
+    .controls { 
+      position: absolute; 
+      bottom: 40px; 
+      left: 50%; 
+      transform: translateX(-50%); 
+      z-index: 1000; 
+      display: flex; 
+      gap: 15px; 
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px 15px;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+      backdrop-filter: blur(5px);
+    }
+    
+    /* Standard button styling */
+    button.action-btn { 
+      padding: 12px 24px; 
+      font-size: 15px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      border: none; 
+      border-radius: 8px; 
+      transition: all 0.2s ease;
+    }
+    
+    .btn-mark {
+      background: #3b82f6; 
+      color: white; 
+      box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+    }
+    .btn-mark:active { background: #2563eb; transform: translateY(2px); }
+    
+    .btn-export {
+      background: #10b981; 
+      color: white; 
+      box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+    }
+    .btn-export:active { background: #059669; transform: translateY(2px); }
+
+    /* Custom CSS for the popup delete button */
+    .delete-btn {
+      display: block;
+      width: 100%;
+      margin-top: 8px;
+      padding: 6px 12px;
+      background: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+    .delete-btn:hover { background: #dc2626; }
+
+    /* Custom modal styling */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .modal-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      width: 80%;
+      max-width: 320px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    .modal-content h3 { margin-top: 0; color: #1f2937; }
+    .modal-content p { color: #4b5563; margin-bottom: 20px; }
+    .modal-content button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: bold;
+      width: 100%;
+      cursor: pointer;
+    }
+
+    /* Tooltip styling for dynamic distance */
+    .dist-tooltip {
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #1f2937;
+      white-space: nowrap;
+    }
+    /* Style the little triangle arrow on the tooltip */
+    .leaflet-tooltip-top:before {
+      border-top-color: rgba(255, 255, 255, 0.95);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Map Container -->
+  <div id="map"></div>
+  
+  <!-- Floating Controls -->
+  <div class="controls">
+    <button id="markBtn" class="action-btn btn-mark">Mark Point</button>
+    <button id="exportBtn" class="action-btn btn-export">Export CSV</button>
+  </div>
+
+  <!-- Custom Notification Modal (replaces alert) -->
+  <div id="alertModal" class="modal-overlay">
+    <div class="modal-content">
+      <h3 id="modalTitle">Notice</h3>
+      <p id="modalMessage">Message here</p>
+      <button onclick="closeModal()">OK</button>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  
+  <script>
+    // Initialize the map. We don't set a default center yet, we wait for GPS.
+    const map = L.map('map', { maxZoom: 24 }).fitWorld();
+    
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+      maxZoom: 24, 
+      maxNativeZoom: 19, // Scales up the closest available tiles when zoomed past 19
+      attribution: '© OpenStreetMap' 
+    }).addTo(map);
+
+    // Global variables to store state
+    let currentPos = null;
+    let liveMarker = null;
+    let markersLayer = L.layerGroup().addTo(map); // Group to easily manage saved markers
+    let activeMarkers = {}; // Store marker references by ID for dynamic distance updates
+    
+    // Load existing points from local storage
+    let points = JSON.parse(localStorage.getItem('mapPoints') || '[]');
+
+    // Custom modal logic
+    const modal = document.getElementById('alertModal');
+    function showModal(title, message) {
+      document.getElementById('modalTitle').innerText = title;
+      document.getElementById('modalMessage').innerText = message;
+      modal.classList.add('active');
+    }
+    function closeModal() {
+      modal.classList.remove('active');
+    }
+
+    // Function to render a point on the map and bind the popup with delete button
+    function renderPoint(point) {
+      // Create a standard marker
+      const marker = L.marker([point.lat, point.lng]);
+      
+      // Calculate initial distance if GPS is available
+      let distText = 'Calculating...';
+      if (currentPos) {
+        const dist = currentPos.distanceTo([point.lat, point.lng]);
+        distText = dist < 1000 ? Math.round(dist) + ' m' : (dist / 1000).toFixed(2) + ' km';
+      }
+
+      // Bind a permanent tooltip to show distance above the marker
+      marker.bindTooltip(`Distance: ${distText}`, { 
+        permanent: true, 
+        direction: 'top', 
+        className: 'dist-tooltip',
+        offset: [0, -35] // Move it slightly above the default marker pin
+      });
+      
+      // We must construct the popup content dynamically via DOM elements 
+      // so we can attach a reliable click event listener to the button.
+      const popupDiv = document.createElement('div');
+      popupDiv.innerHTML = `
+        <div style="font-size: 14px; margin-bottom: 5px;"><strong>Marked at:</strong><br>${point.time}</div>
+      `;
+      
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-btn';
+      deleteBtn.innerText = 'Delete Point';
+      
+      // When delete is clicked inside the popup
+      deleteBtn.onclick = function() {
+        // Remove from map layer
+        markersLayer.removeLayer(marker);
+        
+        // Remove from active tracking pool
+        delete activeMarkers[point.id];
+
+        // Remove from our data array
+        points = points.filter(p => p.id !== point.id);
+        
+        // Save updated array to local storage
+        localStorage.setItem('mapPoints', JSON.stringify(points));
+      };
+      
+      popupDiv.appendChild(deleteBtn);
+      
+      // Bind popup to marker and add to layer group
+      marker.bindPopup(popupDiv);
+      markersLayer.addLayer(marker);
+      
+      // Store in active markers dictionary for dynamic distance updates
+      activeMarkers[point.id] = marker;
+    }
+
+    // Render all saved points on startup
+    points.forEach(p => renderPoint(p));
+
+    // Start watching the user's location continuously.
+    // 'setView: true' ensures the map initially zooms to the location.
+    map.locate({ 
+      setView: true, 
+      maxZoom: 19, 
+      watch: true, 
+      enableHighAccuracy: true 
+    });
+
+    // Event fired whenever a new GPS location is found
+    map.on('locationfound', e => {
+      currentPos = e.latlng;
+      
+      // Update the blue dot marker
+      if (liveMarker) {
+        liveMarker.setLatLng(currentPos);
+      } else {
+        // Create the blue dot for the first time
+        liveMarker = L.circleMarker(currentPos, { 
+          color: '#ffffff', // white border
+          weight: 2,
+          fillColor: '#3b82f6', // blue fill
+          radius: 8, 
+          fillOpacity: 1 
+        }).addTo(map);
+      }
+      
+      // Make the map follow the blue dot automatically
+      // We use panTo to smoothly move the map to the new coordinate
+      map.panTo(currentPos);
+
+      // Dynamically update distances for all saved markers
+      Object.keys(activeMarkers).forEach(id => {
+        const marker = activeMarkers[id];
+        const pointLatLng = marker.getLatLng();
+        const distance = currentPos.distanceTo(pointLatLng);
+        
+        // Format to meters if < 1km, otherwise kilometers
+        const distText = distance < 1000 
+          ? distance.toFixed(1) + 'm' 
+          : (distance / 1000).toFixed(2) + 'km';
+          
+        marker.setTooltipContent(distText);
+      });
+    });
+
+    // Event fired if GPS tracking fails
+    map.on('locationerror', e => {
+      showModal('Location Error', 'Unable to retrieve location. Please ensure GPS is enabled and permissions are granted.');
+      console.warn("Location error:", e.message);
+    });
+
+    // Handle "Mark Point" button click
+    document.getElementById('markBtn').onclick = () => {
+      if (!currentPos) {
+        showModal('Wait', 'Still acquiring GPS signal...');
+        return;
+      }
+      
+      // Create a unique point object using current tracked position
+      const newPoint = { 
+        id: Date.now(), // unique identifier for deletion
+        lat: currentPos.lat, 
+        lng: currentPos.lng, 
+        time: new Date().toLocaleString() 
+      };
+      
+      // Save data
+      points.push(newPoint);
+      localStorage.setItem('mapPoints', JSON.stringify(points));
+      
+      // Render to map
+      renderPoint(newPoint);
+      
+      // Provide subtle visual feedback without blocking the UI
+      const originalText = document.getElementById('markBtn').innerText;
+      document.getElementById('markBtn').innerText = 'Saved!';
+      setTimeout(() => {
+        document.getElementById('markBtn').innerText = originalText;
+      }, 1500);
+    };
+
+    // Handle "Export CSV" button click
+    document.getElementById('exportBtn').onclick = () => {
+      if (points.length === 0) {
+        showModal('Empty', 'No points to export yet. Mark some points first.');
+        return;
+      }
+      
+      // Construct CSV string
+      let csvContent = "No,Latitude,Longitude,Time\n";
+      points.forEach((p, i) => {
+        csvContent += `${i},${p.lat},${p.lng},"${p.time}"\n`;
+      });
+      
+      // Trigger download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `gps_locations_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    };
+  </script>
+</body>
+</html>
