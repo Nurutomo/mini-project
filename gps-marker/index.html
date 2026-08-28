@@ -164,6 +164,23 @@
     .leaflet-tooltip-top:before {
       border-top-color: rgba(255, 255, 255, 0.95);
     }
+    
+    /* Custom Marker CSS */
+    .custom-div-icon {
+      background: transparent;
+      border: none;
+    }
+    .custom-map-marker {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      transition: background-color 0.3s;
+    }
+    .marker-terang { background-color: #ffffff; border-color: #9ca3af; } /* Darker border so white stands out */
+    .marker-redup { background-color: #9ca3af; }
+    .marker-gelap { background-color: #111827; }
   </style>
 </head>
 <body>
@@ -223,10 +240,30 @@
       modal.classList.remove('active');
     }
 
+    // Helper function to create custom colored icons based on condition
+    function getMarkerIcon(condition) {
+      let colorClass = 'marker-terang'; // default
+      if (condition === 'Redup') colorClass = 'marker-redup';
+      if (condition === 'Gelap') colorClass = 'marker-gelap';
+      
+      return L.divIcon({
+        className: 'custom-div-icon',
+        html: `<div class="custom-map-marker ${colorClass}"></div>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10], // Centers the icon at the exact coordinate
+        popupAnchor: [0, -10] // Positions the popup right above the icon
+      });
+    }
+
     // Function to render a point on the map and bind the popup with delete button
     function renderPoint(point) {
-      // Create a standard marker
-      const marker = L.marker([point.lat, point.lng]);
+      // Ensure condition defaults to 'Terang' for old points
+      const currentCondition = point.condition || 'Terang';
+
+      // Create a custom marker based on condition instead of default blue pin
+      const marker = L.marker([point.lat, point.lng], {
+        icon: getMarkerIcon(currentCondition)
+      });
       
       // Calculate initial distance if GPS is available
       let distText = 'Calculating...';
@@ -236,19 +273,16 @@
       }
 
       // Bind a permanent tooltip to show distance above the marker
-      marker.bindTooltip(distText, { 
+      marker.bindTooltip(`Distance: ${distText}`, { 
         permanent: true, 
         direction: 'top', 
         className: 'dist-tooltip',
-        offset: [0, -35] // Move it slightly above the default marker pin
+        offset: [0, -15] // Moved closer to the smaller custom dot
       });
       
       // We must construct the popup content dynamically via DOM elements 
       // so we can attach a reliable click event listener to the button.
       const popupDiv = document.createElement('div');
-      
-      // Ensure condition defaults to 'Terang' for old points
-      const currentCondition = point.condition || 'Terang';
       
       popupDiv.innerHTML = `
         <div style="font-size: 14px; margin-bottom: 5px;"><strong>Marked at:</strong><br>${point.time}</div>
@@ -266,6 +300,10 @@
       const selectEl = popupDiv.querySelector('.condition-select');
       selectEl.onchange = function(e) {
         point.condition = e.target.value;
+        
+        // Instantly update the marker color on the map
+        marker.setIcon(getMarkerIcon(point.condition));
+
         // Update the point in our array and save to local storage
         const idx = points.findIndex(p => p.id === point.id);
         if (idx !== -1) {
@@ -371,7 +409,7 @@
         lat: currentPos.lat, 
         lng: currentPos.lng, 
         time: new Date().toLocaleString(),
-        condition: 'Gelap' // Default light condition
+        condition: 'Terang' // Default light condition
       };
       
       // Save data
@@ -399,7 +437,7 @@
       // Construct CSV string
       let csvContent = "No,Latitude,Longitude,Time,Condition\n";
       points.forEach((p, i) => {
-        const condition = p.condition || 'Gelap';
+        const condition = p.condition || 'Terang';
         csvContent += `${i},${p.lat},${p.lng},"${p.time}",${condition}\n`;
       });
       
