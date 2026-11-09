@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Petualangan Bangun Ruang</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{height:100%;overflow:hidden;font-family:'Fredoka','Trebuchet MS',system-ui,sans-serif;color:#17324d}
+body{background:linear-gradient(#1e90ff,#38b6ff 45%,#c9f3ff 62%)}
+.bg{position:fixed;inset:0;overflow:hidden;z-index:0}
+.sun{position:absolute;left:50%;top:42%;width:min(30vw,260px);aspect-ratio:1;transform:translateX(-50%);border-radius:50%;background:radial-gradient(circle at 50% 40%,#fff176,#ff9f1c);box-shadow:0 0 60px 20px rgba(255,214,70,.5)}
+.floor{position:absolute;left:0;right:0;bottom:0;height:40%;perspective:420px;perspective-origin:50% 0;overflow:hidden;background:linear-gradient(#b8f5d0,#38b6ff 55%,#1e90ff)}
+.grid{position:absolute;left:-100%;width:300%;top:0;height:260%;transform-origin:50% 0;transform:rotateX(76deg);background-image:linear-gradient(rgba(255,255,255,.9) 3px,transparent 3px),linear-gradient(90deg,rgba(255,255,255,.9) 3px,transparent 3px);background-size:90px 90px;animation:mv 1.4s linear infinite}
+@keyframes mv{to{background-position:0 90px,0 0}}
+.cl{position:absolute;height:40px;width:120px;background:#fff;border-radius:40px;animation:dr linear infinite}
+.cl::before{content:"";position:absolute;width:62px;height:62px;left:30px;top:-30px;background:#fff;border-radius:50%}
+@keyframes dr{from{transform:translateX(-200px)}to{transform:translateX(calc(100vw + 200px))}}
+.scr{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:max(14px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom));z-index:2}
+.scr.on{display:flex}
+h1{color:#fff;font-size:clamp(34px,8vw,68px);text-align:center;line-height:1.05;text-shadow:0 5px 0 #1b6fd0,0 10px 18px rgba(0,50,120,.35);animation:sw 3s ease-in-out infinite;transform-origin:50% 0}
+@keyframes sw{0%,100%{transform:rotate(2deg)}50%{transform:rotate(-2deg)}}
+.btn{font:700 20px 'Fredoka',system-ui;color:#fff;background:linear-gradient(#ffb23f,#ff8a00);border:4px solid #fff;border-radius:999px;padding:12px 34px;min-width:230px;box-shadow:0 7px 0 #c25d00;cursor:pointer;transition:transform .08s}
+.btn:active{transform:translateY(5px);box-shadow:0 2px 0 #c25d00}
+.btn.g{background:linear-gradient(#7ee081,#3fbf55);box-shadow:0 7px 0 #27863a}
+.btn.b{background:linear-gradient(#5fb8ff,#1e90ff);box-shadow:0 7px 0 #1269c4}
+.btn.s{min-width:0;padding:8px 20px;font-size:16px}
+.ib{position:fixed;top:max(10px,env(safe-area-inset-top));right:10px;z-index:9;width:46px;height:46px;border-radius:50%;border:4px solid #fff;background:#ffd93d;font-size:20px;cursor:pointer}
+.row{display:flex;gap:18px;align-items:flex-end}
+.mas{width:90px;height:90px;border-radius:22px;position:relative;background:#4dabff;border:4px solid #fff;box-shadow:0 8px 0 #1b6fd0;animation:bob 2.5s ease-in-out infinite}
+.mas.balo{background:#7ee081;width:120px;height:78px;box-shadow:0 8px 0 #3da64a;animation-delay:-1s}
+.mas i{position:absolute;top:30%;width:13px;height:18px;background:#123;border-radius:50%}
+.mas i:nth-child(1){left:24%}.mas i:nth-child(2){right:24%}
+.mas b{position:absolute;left:50%;bottom:18%;width:30px;height:14px;margin-left:-15px;border-bottom:5px solid #123;border-radius:0 0 30px 30px}
+.mas.sad b{border-bottom:0;border-top:5px solid #123;border-radius:30px 30px 0 0}
+.mas.hap b{height:20px;background:#123;border:0}
+@keyframes bob{50%{transform:translateY(-12px)}}
+.panel{background:#fff;border:6px solid #ffd93d;border-radius:28px;padding:20px 24px;max-width:520px;width:100%;box-shadow:0 10px 0 rgba(0,0,0,.12)}
+.chalk{background:#1f5a3f;color:#fff;border-color:#c98b4e;font-size:18px;line-height:1.5}
+.chalk h2{color:#ffe66d;margin-bottom:8px}
+.map{display:flex;gap:clamp(12px,4vw,40px);align-items:center;flex-wrap:wrap;justify-content:center}
+.isl{width:140px;padding:14px 8px;border:5px solid #fff;border-radius:30px;background:linear-gradient(#fff6b0,#ffd93d);text-align:center;cursor:pointer;box-shadow:0 8px 0 #d9a400;font-weight:700}
+.isl:nth-child(2){transform:translateY(-22px)}
+.isl .e{font-size:48px;display:block}.isl small{display:block;font-size:20px;color:#ff8a00;letter-spacing:2px;margin-top:4px}
+.isl.lk{background:#cfd8dc;box-shadow:0 8px 0 #90a4ae;cursor:not-allowed;filter:grayscale(.6)}
+#game{justify-content:center;gap:10px}
+.hud{display:flex;width:100%;max-width:640px;align-items:center;justify-content:space-between;font-weight:700;color:#fff;text-shadow:0 2px 0 #1b6fd0;padding-right:54px}
+.board{width:100%;max-width:640px;background:linear-gradient(#d9a066,#b97a3d);border:5px solid #7a4a1d;border-radius:20px;color:#fff;padding:18px 20px;font-size:clamp(21px,5vw,32px);line-height:1.35;font-weight:600;text-shadow:0 2px 0 rgba(0,0,0,.3);text-align:center;box-shadow:0 6px 0 rgba(0,0,0,.2)}
+#stage,.stg{position:relative;flex:none;height:clamp(190px,32vh,290px);perspective:800px;width:100%;max-width:640px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;touch-action:none;background:rgba(255,255,255,.28);border:4px dashed #fff;border-radius:26px}
+#stage .hint,.stg .hint{font-size:14px;color:#fff;font-weight:700;text-shadow:0 2px 0 #1b6fd0;text-align:center;padding:0 8px}
+.cnt{background:#fff;border-radius:999px;padding:4px 16px;font-weight:700;color:#ff8a00;border:3px solid #ffd93d;font-size:16px}
+.ans{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:640px}
+.a{position:relative;font:700 clamp(14px,3.4vw,19px) 'Fredoka',system-ui;color:#17324d;background:#fff;border:4px solid #bfe8ff;border-radius:30px;padding:12px 10px 12px 46px;min-height:62px;text-align:left;cursor:pointer;box-shadow:0 6px 0 #8fcbf0}
+.a span{position:absolute;left:8px;top:50%;margin-top:-17px;width:34px;height:34px;border-radius:50%;background:#ffd93d;display:grid;place-items:center}
+.a:active{transform:translateY(4px)}
+.a.ok{animation:pop .6s forwards;background:#b8f5c8;border-color:#3fbf55}
+@keyframes pop{40%{transform:scale(1.25)}100%{transform:scale(0);opacity:0}}
+.a.no{animation:sh .5s;background:#ffd1d1;border-color:#ff5a5a;color:#999;box-shadow:none}
+.a.no::after{content:"✖";position:absolute;right:12px;top:50%;margin-top:-14px;color:#e5252a;font-size:24px}
+@keyframes sh{20%,60%{transform:translateX(-9px)}40%,80%{transform:translateX(9px)}}
+.ov{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:rgba(10,50,100,.45);padding:16px}
+.ov.on{display:flex}
+.ov .panel{text-align:center;position:relative;z-index:2}
+.big{font-size:90px;display:inline-block;animation:spn 2.4s linear infinite}
+@keyframes spn{to{transform:rotateY(360deg)}}
+.hb{font-size:46px;font-weight:700;color:#ff8a00;text-shadow:0 3px 0 #ffd93d;animation:pp .5s}
+@keyframes pp{from{transform:scale(.2)}}
+.toast{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);z-index:30;background:#ff5a5a;color:#fff;font-weight:700;font-size:26px;padding:12px 26px;border-radius:999px;border:4px solid #fff;animation:tt 1.1s forwards;pointer-events:none}
+@keyframes tt{0%{opacity:0;transform:translate(-50%,-30%) scale(.5)}20%,80%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0}}
+.cf{position:fixed;top:-20px;width:10px;height:14px;z-index:25;animation:fall linear forwards;pointer-events:none}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+.stars{font-size:64px;letter-spacing:6px;color:#ccd}
+.stars b{display:inline-block;font-weight:400;transition:.3s}
+.stars b.on{color:#ffc400;animation:pp .6s backwards;text-shadow:0 0 14px #ffe066}
+/* 3D */
+.sc3{width:0;height:0;position:relative;transform-style:preserve-3d}
+.fc{position:absolute;left:50%;top:50%;border:3px solid #fff;border-radius:10px;opacity:.9;background:#4dabff}
+.fc:nth-child(2n){background:#7ee081}.fc:nth-child(3n){background:#ffb23f}
+.fc.hit{cursor:pointer}.fc.on{background:#ffd93d!important;box-shadow:0 0 18px #fff}
+.dw{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d;cursor:pointer}
+.dw u{position:absolute;left:-12px;top:-12px;width:24px;height:24px;border-radius:50%;background:#ff4d6d;border:3px solid #fff}
+.dw u:nth-child(2){transform:rotateY(90deg)}.dw u:nth-child(3){transform:rotateX(90deg)}
+.dw b{position:absolute;top:-6px;height:12px;background:#ff4d6d;border-radius:6px;border:2px solid #fff}
+.dw b+b{transform:rotateX(90deg)}
+.dw.on u,.dw.on b{background:#ffd93d;box-shadow:0 0 14px #fff}
+.nb{position:relative;width:var(--w);height:var(--d);transform-style:preserve-3d;transform:rotateX(var(--rx,55deg)) rotateZ(var(--rz,-28deg));margin:10px 0}
+.nf{position:absolute;border:3px solid #fff;border-radius:6px;transform-style:preserve-3d;background:#4dabff}
+.nf.base{inset:0}
+.nf.r{left:100%;top:0;width:var(--h);height:var(--d);transform-origin:0 50%;transform:rotateY(calc(var(--t)*-90deg));background:#ffd93d}
+.nf.l{right:100%;top:0;width:var(--h);height:var(--d);transform-origin:100% 50%;transform:rotateY(calc(var(--t)*90deg));background:#ffd93d}
+.nf.t{bottom:100%;left:0;width:var(--w);height:var(--h);transform-origin:50% 100%;transform:rotateX(calc(var(--t)*-90deg));background:#7ee081}
+.nf.b{top:100%;left:0;width:var(--w);height:var(--h);transform-origin:50% 0;transform:rotateX(calc(var(--t)*90deg));background:#7ee081}
+.nf.lid{top:100%;left:0;width:var(--w);height:var(--d);transform-origin:50% 0;transform:rotateX(calc(var(--t)*90deg));background:#ffb23f}
+.sl{width:80%;accent-color:#ff8a00;height:34px}
+.cn{position:relative;width:230px;height:190px}.cn svg{position:absolute;inset:0;width:100%;height:100%}
+.cn .p{opacity:calc(1 - var(--t))}.cn .q{position:absolute;left:50%;top:50%;width:0;height:0;opacity:var(--t)}.sg{position:absolute;left:50%;top:50%}
+.mc h2{color:#ff8a00;font-size:26px;margin-bottom:8px}.mc p,.mc li{font-size:clamp(17px,4vw,21px);line-height:1.45;margin:4px 0}.mc ul,.mc ol{padding-left:24px}.mc table{width:100%;border-collapse:collapse;font-size:clamp(15px,3.6vw,19px);margin-top:6px}.mc td,.mc th{border:2px solid #bfe8ff;padding:6px;text-align:center}.mc th{background:#ffd93d}.mc details{background:#eaf7ff;border-radius:14px;padding:8px 12px;margin:6px 0;font-size:clamp(16px,3.8vw,20px)}.mc summary{font-weight:700;cursor:pointer}.note{background:#fff6b0;border-radius:14px;padding:8px 12px;margin-top:8px;font-weight:700}.tb{display:flex;align-items:center;gap:8px;margin:6px 0;flex-wrap:wrap;justify-content:center;font-size:20px;font-weight:700}.tb .e{font-size:38px}.tb .btn{min-width:0;padding:6px 16px;font-size:17px}.btn.rt{background:#3fbf55;box-shadow:0 7px 0 #27863a}.btn.wr{background:#ff5a5a;box-shadow:0 7px 0 #b32d2d;opacity:.7}
+.pf{cursor:pointer;stroke:#fff;stroke-width:4;stroke-linejoin:round}.pf.on{fill:#ffd93d!important}
+</style>
+</head>
+<body>
+<div class="bg"><div class="sun"></div><div class="cl" style="top:12%;animation-duration:50s;animation-delay:-12s"></div><div class="cl" style="top:26%;animation-duration:72s;animation-delay:-40s"></div><div class="floor"><div class="grid"></div></div></div>
+<button class="ib" id="snd">🔊</button>
+
+<section id="menu" class="scr on">
+  <h1>Petualangan<br>Bangun Ruang</h1>
+  <div class="row"><div class="mas hap"><i></i><i></i><b></b></div><div class="mas balo hap"><i></i><i></i><b></b></div></div>
+  <div style="color:#fff;font-weight:700;text-shadow:0 2px 0 #1b6fd0;font-size:20px">Halo! Aku Kubi dan Balo 👋</div>
+  <button class="btn" onclick="go('mode')">▶ Main</button>
+  <button class="btn b" onclick="go('help')">📘 Panduan</button>
+</section>
+
+<section id="help" class="scr">
+  <div class="panel chalk"><h2>📘 Cara Bermain</h2>
+    <p>👆 <b>Geser</b> bangun ruang 3D untuk memutarnya.</p>
+    <p>🔴 <b>Ketuk</b> sisi, titik sudut, atau rusuk untuk menghitungnya.</p>
+    <p>🎚️ <b>Geser tuas</b> untuk melipat jaring-jaring.</p>
+    <p>☁️ Pilih <b>awan jawaban</b> A, B, C, atau D.</p>
+    <p>⭐ Jawab benar di percobaan pertama untuk poin penuh!</p><p>📚 Belajar dulu di <b>Materi</b>, lalu uji dirimu di <b>Quiz</b>!</p></div>
+  <button class="btn" onclick="go('menu')">⬅ Kembali</button>
+</section>
+
+<section id="map" class="scr">
+  <h1 style="font-size:clamp(28px,6vw,48px)">Peta Harta Karun</h1>
+  <div class="map" id="isl"></div>
+  <button class="btn s b" onclick="go('mode')">⬅ Kembali</button>
+</section>
+
+<section id="game" class="scr">
+  <div class="hud"><button class="btn s b" onclick="renderMap();go('map')">⬅ Peta</button><span id="lv"></span><span id="sc"></span></div>
+  <div class="board" id="qt"></div>
+  <div id="stage"></div>
+  <div class="ans" id="ans"></div>
+</section>
+
+<section id="mode" class="scr">
+  <h1 style="font-size:clamp(30px,7vw,54px)">Mau Ngapain?</h1>
+  <div class="row"><div class="mas hap"><i></i><i></i><b></b></div><div class="mas balo hap"><i></i><i></i><b></b></div></div>
+  <button class="btn g" onclick="openM()">📚 Materi</button>
+  <button class="btn" onclick="renderMap();go('map')">🎮 Quiz</button>
+  <button class="btn s b" onclick="go('menu')">⬅ Menu</button>
+</section>
+
+<section id="materi" class="scr" style="justify-content:flex-start;overflow-y:auto;padding-bottom:30px">
+  <div class="hud"><button class="btn s b" onclick="go('mode')">⬅ Kembali</button><span id="mp"></span><span></span></div>
+  <div class="panel" id="mc" style="max-width:640px"></div>
+  <div class="stg" id="mst" style="display:none"></div>
+  <div class="row" style="align-items:center"><button class="btn s" id="mprev">◀ Balik</button><button class="btn s g" id="mnext">Lanjut ▶</button></div>
+</section>
+
+<section id="res" class="scr">
+  <div class="panel"><div class="hb" style="font-size:36px">Hasil Akhir</div>
+    <div class="row" style="justify-content:center;margin:8px 0"><div class="mas hap" id="rm"><i></i><i></i><b></b></div></div>
+    <div class="stars" id="stars"><b>★</b><b>★</b><b>★</b></div>
+    <p id="rtxt" style="font-size:22px;font-weight:700;margin-top:6px"></p></div>
+  <button class="btn g" id="again">🔁 Main Lagi</button>
+  <button class="btn b" onclick="renderMap();go('map')">🗺️ Kembali ke Peta</button>
+</section>
+<div class="ov" id="ov"></div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+let S={u:1,st:[0,0,0]};try{S=JSON.parse(localStorage.getItem('bbr'))||S}catch(e){}
+const sv=()=>{try{localStorage.setItem('bbr',JSON.stringify(S))}catch(e){}};
+const go=id=>$$('.scr').forEach(e=>e.classList.toggle('on',e.id==id));
+/* audio */
+let ac,mute=false,bi=0,bt;
+function tn(f,d=.15,ty='sine',at=0,v=.12,f2){if(mute)return;try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const t=ac.currentTime+at,o=ac.createOscillator(),g=ac.createGain();o.type=ty;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+d)}catch(e){}}
+const fx={pop:()=>tn(520,.1,'sine',0,.15,880),ok:()=>[660,880,1175].forEach((f,i)=>tn(f,.3,'triangle',i*.1)),bad:()=>tn(320,.45,'square',0,.07,90),cling:()=>{tn(1400,.4,'sine',0,.1);tn(2100,.5,'sine',.08,.07)}};
+const mel=[523,659,784,659,587,740,880,740];
+addEventListener('pointerdown',e=>{if(!bt)bt=setInterval(()=>tn(mel[bi++%8],.35,'sine',0,.03),450);if(e.target.closest('.btn,.isl'))fx.pop()});
+$('#snd').onclick=function(){mute=!mute;this.textContent=mute?'🔇':'🔊'};
+/* data */
+const Q=[
+{l:1,q:'Bangun ruang yang memiliki enam sisi berbentuk persegi dan sama besar disebut ....',o:['Balok','Tabung','Kubus','Prisma'],a:2,v:'none',s:['🎁','Kubus, seperti dadu dan kado!']},
+{l:1,q:'Aku memiliki alas dan tutup yang berbentuk lingkaran sama besar. Badanku melengkung. Siapakah aku?',o:['Bola','Tabung','Kerucut','Balok'],a:1,v:'none',s:['🥫','Tabung, seperti kaleng minuman!']},
+{l:1,q:'Bangun ruang yang memiliki sisi-sisi berbentuk persegi panjang disebut ....',o:['Kubus','Balok','Kerucut','Bola'],a:1,v:'none',s:['✏️','Balok, seperti kotak pensil!']},
+{l:1,q:'Benda seperti tenda pramuka atau potongan kue lapis biasanya berbentuk ....',o:['Prisma Segitiga','Tabung','Kubus','Bola'],a:0,v:'none',s:['⛺','Prisma segitiga, seperti tenda!']},
+{l:2,q:'Jumlah titik sudut pada balok adalah ....',o:['6','8','10','12'],a:1,v:'box',m:'v',dim:[130,70,60],hint:'Ketuk titik merah di sudut balok!',s:['✏️','Balok punya 8 titik sudut!']},
+{l:2,q:'Berapakah jumlah rusuk (garis pertemuan antara dua sisi) yang dimiliki oleh kubus?',o:['8','10','12','14'],a:2,v:'box',m:'e',dim:[90,90,90],hint:'Ketuk garis merah (rusuk) kubus!',s:['🎲','Kubus punya 12 rusuk!']},
+{l:2,q:'Sebuah prisma segitiga memiliki sisi atas dan alas berbentuk segitiga, serta 3 sisi tegak. Berapa total sisi yang dimilikinya?',o:['3','4','5','6'],a:2,v:'prism',hint:'Ketuk setiap sisi untuk menghitung!',s:['⛺','Prisma segitiga punya 5 sisi!']},
+{l:2,q:'Bangun manakah di bawah ini yang tidak memiliki titik sudut sama sekali?',o:['Tabung','Kubus','Prisma','Bola'],a:3,v:'none',s:['⚽','Bola tidak punya titik sudut!']},
+{l:3,q:'Jika jaring-jaring balok dilipat dengan susunan yang tepat, bentuk yang dihasilkan adalah ....',o:['Kubus','Prisma','Balok','Tabung'],a:2,v:'net',dim:[120,60,80],hint:'Geser tuas untuk melipat!',s:['📦','Jaring-jaring balok jadi balok!']},
+{l:3,q:'Jaring-jaring kubus tersusun dari ....',o:['6 persegi yang sama besar','4 persegi & 2 persegi panjang','2 lingkaran & 1 persegi panjang','4 segitiga & 1 persegi'],a:0,v:'net',dim:[80,80,80],hint:'Geser tuas untuk melipat!',s:['🎲','Enam persegi sama besar jadi kubus!']},
+{l:3,q:'Jaring-jaring yang terdiri dari dua buah lingkaran dan satu buah persegi panjang (selimut) akan membentuk ....',o:['Kerucut','Prisma Segitiga','Bola','Tabung'],a:3,v:'cyl',hint:'Geser tuas untuk melipat!',s:['🥫','Jadi tabung, seperti kaleng!']},
+{l:4,q:'Topi ulang tahun atau cone es krim adalah contoh bentuk kerucut. Berapa jumlah titik puncak yang dimiliki kerucut?',o:['1','2','3','Tidak ada'],a:0,v:'cone',hint:'Ketuk titik puncak kerucut!',s:['🍦','Kerucut punya 1 titik puncak!']}
+];
+Q[11].l=3;
+const NAMES=[['🏝️','Pulau Kenali'],['🌴','Pulau Hitung'],['🏴‍☠️','Pulau Jaring']];
+function renderMap(){$('#isl').innerHTML=NAMES.map((n,i)=>{const lk=i+1>S.u;return`<div class="isl ${lk?'lk':''}" onclick="${lk?'':`play(${i+1})`}"><span class="e">${lk?'🔒':n[0]}</span>${n[1]}<small>${[0,1,2].map(k=>k<S.st[i]?'★':'☆').join('')}</small></div>`}).join('')}
+function bye(){$('#ov').innerHTML='<div class="panel"><div class="hb" style="font-size:30px">Sampai jumpa! 👋</div><p style="margin:10px 0">Terima kasih sudah bermain.</p><button class="btn" onclick="$(\'#ov\').classList.remove(\'on\')">Main Lagi</button></div>';$('#ov').classList.add('on');try{window.close()}catch(e){}}
+/* game */
+let L,qs,qi,score,wr,cur;
+const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function play(l){L=l;qs=Q.filter(q=>q.l==l);qi=0;score=0;$('#again').onclick=()=>play(L);go('game');nq()}
+function nq(){cur=qs[qi];wr=0;$('#qt').textContent=cur.q;$('#lv').textContent=`${NAMES[L-1][1]} · Soal ${qi+1}/${qs.length}`;$('#sc').textContent='⭐ '+score;viz(cur);
+$('#ans').innerHTML=shuf([0,1,2,3]).map((k,j)=>`<button class="a" data-k="${k}"><span>${'ABCD'[j]}</span>${cur.o[k]}</button>`).join('');
+$$('.a').forEach(b=>b.onclick=()=>pick(b))}
+function pick(b){if(b.disabled)return;fx.pop();
+if(+b.dataset.k==cur.a){const pts=Math.max(4,10-3*wr);score+=pts;$('#sc').textContent='⭐ '+score;$$('.a').forEach(x=>x.disabled=true);b.classList.add('ok');fx.ok();confetti();setTimeout(()=>showOk(pts),800)}
+else{wr++;b.classList.add('no');b.disabled=true;fx.bad();toast('Oops! Coba Lagi!')}}
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.append(d);setTimeout(()=>d.remove(),1200)}
+function confetti(){const c=['#ffd93d','#ff8a00','#4dabff','#7ee081','#ff4d6d'];for(let i=0;i<50;i++){const d=document.createElement('i');d.className='cf';d.style.cssText=`left:${Math.random()*100}vw;background:${c[i%5]};animation-duration:${1.4+Math.random()*1.6}s;animation-delay:${Math.random()*.3}s`;document.body.append(d);setTimeout(()=>d.remove(),3500)}}
+function showOk(pts){const o=$('#ov');o.innerHTML=`<div class="panel"><div class="hb">HEBAT! 🎉</div><div class="big">${cur.s[0]}</div><p style="font-size:20px;font-weight:700;margin:6px 0">${cur.s[1]}</p><p style="color:#ff8a00;font-weight:700;margin-bottom:12px">+${pts} poin</p><button class="btn g" id="nx">Lanjut ▶</button></div>`;o.classList.add('on');$('#nx').onclick=()=>{o.classList.remove('on');++qi<qs.length?nq():fin()}}
+function fin(){const mx=qs.length*10,st=score>=mx*.9?3:score>=mx*.6?2:1;S.st[L-1]=Math.max(S.st[L-1],st);if(L==S.u&&L<3)S.u++;sv();go('res');
+const sb=$$('#stars b');sb.forEach(b=>b.classList.remove('on'));$('#rtxt').textContent=`Total poin: ${score} / ${mx}`;
+sb.forEach((b,i)=>{if(i<st)setTimeout(()=>{b.classList.add('on');fx.cling()},500+i*600)});confetti()}
+/* viz */
+const V={};
+function viz(q){const st=$('#stage');st.innerHTML='';st.style.removeProperty('--t');V[q.v](st,q);}
+const hint=(st,t)=>{const h=document.createElement('div');h.className='hint';h.textContent=t;st.append(h)};
+V.none=st=>{st.innerHTML='<div class="mas"><i></i><i></i><b></b></div><div class="hint">🤔 Baca soal dengan teliti, lalu pilih awan jawabanmu!</div>'};
+function drag(el,cb){let d=0,x,y;el.onpointerdown=e=>{d=e.target.closest('input')?0:1;x=e.clientX;y=e.clientY;el.mv=0};addEventListener('pointermove',e=>{if(!d)return;const dx=e.clientX-x,dy=e.clientY-y;if(Math.abs(dx)+Math.abs(dy)>3)el.mv=1;x=e.clientX;y=e.clientY;cb(dx,dy)});addEventListener('pointerup',()=>d=0)}
+V.box=(st,q)=>{const[w,h,d]=q.dim,m=q.m;let ry=35,rx=-25;
+const F=(a,b,t)=>`<div class="fc ${m=='f'?'hit':''}" style="width:${a}px;height:${b}px;margin:${-b/2}px 0 0 ${-a/2}px;transform:${t}"></div>`;
+let H=F(w,h,`translateZ(${d/2}px)`)+F(w,h,`rotateY(180deg) translateZ(${d/2}px)`)+F(d,h,`rotateY(90deg) translateZ(${w/2}px)`)+F(d,h,`rotateY(-90deg) translateZ(${w/2}px)`)+F(w,d,`rotateX(90deg) translateZ(${h/2}px)`)+F(w,d,`rotateX(-90deg) translateZ(${h/2}px)`);
+const sg=[-1,1];
+if(m=='v')sg.forEach(x=>sg.forEach(y=>sg.forEach(z=>H+=`<div class="dw" style="transform:translate3d(${x*w/2}px,${y*h/2}px,${z*d/2}px)"><u></u><u></u><u></u></div>`)));
+if(m=='e')sg.forEach(a=>sg.forEach(b=>{[[w,'',a*h/2,b*d/2,0],[h,'rotateZ(90deg)',a*w/2,b*d/2,1],[d,'rotateY(90deg)',a*w/2,b*h/2,2]].forEach(([n,r,p,s,k])=>{const pos=k==0?[0,p,s]:k==1?[p,0,s]:[p,s,0];H+=`<div class="dw" style="transform:translate3d(${pos[0]}px,${pos[1]}px,${pos[2]}px) ${r}"><b style="width:${n}px;left:${-n/2}px"></b><b style="width:${n}px;left:${-n/2}px"></b></div>`})}));
+st.innerHTML=`<div class="sc3" id="s3">${H}</div>`;const s3=$('#s3');const up=()=>s3.style.transform=`rotateX(${rx}deg) rotateY(${ry}deg)`;up();
+const c=document.createElement('div');c.className='cnt';c.textContent='Terhitung: 0';st.append(c);hint(st,'✋ Geser untuk memutar · '+q.hint);
+const tot=m=='v'?8:12;
+s3.onclick=e=>{if(st.mv)return;const t=e.target.closest('.dw');if(!t)return;t.classList.toggle('on');fx.pop();c.textContent='Terhitung: '+$$('#s3 .dw.on').length};
+drag(st,(dx,dy)=>{ry+=dx*.6;rx=Math.max(-85,Math.min(85,rx-dy*.6));up()})};
+V.prism=(st,q)=>{const P=(pts,c)=>`<polygon class="pf" fill="${c}" points="${pts}"/>`;
+st.innerHTML=`<svg viewBox="0 0 220 170" width="260" id="pr">${P('90,95 180,95 135,25','#9ad7ff')}${P('30,130 75,60 135,25 90,95','#7ee081')}${P('30,130 120,130 180,95 90,95','#ffb23f')}${P('120,130 75,60 135,25 180,95','#ff9aa8')}${P('30,130 120,130 75,60','#4dabff')}</svg><div class="cnt">Terhitung: 0</div>`;hint(st,q.hint);
+$$('#pr .pf').forEach(p=>p.onclick=()=>{p.classList.toggle('on');fx.pop();$('#stage .cnt').textContent='Terhitung: '+$$('#pr .on').length})};
+V.cone=(st,q)=>{st.innerHTML=`<svg viewBox="0 0 220 180" width="230"><path d="M110 18 L40 140 A70 22 0 0 0 180 140 Z" fill="#ffb23f" stroke="#fff" stroke-width="4" stroke-linejoin="round"/><ellipse cx="110" cy="140" rx="70" ry="22" fill="#ffd93d" stroke="#fff" stroke-width="4"/><circle id="ap" cx="110" cy="20" r="14" fill="#ff4d6d" stroke="#fff" stroke-width="4" style="cursor:pointer"/></svg><div class="cnt">Titik puncak: 0</div>`;hint(st,q.hint);
+$('#ap').onclick=function(){this.setAttribute('fill','#ffd93d');fx.pop();$('#stage .cnt').textContent='Titik puncak: 1'}};
+function slider(st,q,done){const s=document.createElement('input');s.type='range';s.className='sl';s.min=0;s.max=100;s.value=0;let ok=0;st.style.setProperty('--t',0);
+s.oninput=()=>{st.style.setProperty('--t',s.value/100);if(s.value==100&&!ok){ok=1;fx.cling();c.textContent=done}};
+const c=document.createElement('div');c.className='cnt';c.textContent='Geser tuas ➜ melipat';st.append(c,s);hint(st,q.hint+' · Geser layar untuk memutar')}
+V.net=(st,q)=>{const[w,h,d]=q.dim;st.innerHTML=`<div class="nb" style="--w:${w}px;--h:${h}px;--d:${d}px"><div class="nf base"><div class="nf r"></div><div class="nf l"></div><div class="nf t"></div><div class="nf b"><div class="nf lid"></div></div></div></div>`;st.style.setProperty('--t',0);slider(st,q,'✨ Terlipat sempurna!');const nb=$('.nb');let rx=55,rz=-28;drag(st,(dx,dy)=>{rz+=dx*.6;rx=Math.max(5,Math.min(90,rx-dy*.5));nb.style.setProperty('--rx',rx+'deg');nb.style.setProperty('--rz',rz+'deg')})};
+V.cyl=(st,q)=>{st.innerHTML=`<div class="cn"><svg class="p" viewBox="0 0 230 190"><circle cx="115" cy="30" r="24" fill="#4dabff" stroke="#fff" stroke-width="4"/><rect x="55" y="56" width="120" height="76" rx="4" fill="#7ee081" stroke="#fff" stroke-width="4"/><circle cx="115" cy="160" r="24" fill="#4dabff" stroke="#fff" stroke-width="4"/></svg><svg class="q" viewBox="0 0 230 190"><rect x="65" y="45" width="100" height="100" fill="#7ee081" stroke="#fff" stroke-width="4"/><ellipse cx="115" cy="145" rx="50" ry="16" fill="#7ee081" stroke="#fff" stroke-width="4"/><ellipse cx="115" cy="45" rx="50" ry="16" fill="#4dabff" stroke="#fff" stroke-width="4"/></svg></div>`;slider(st,q,'✨ Terbentuk tabung!')};
+const FC=(a,b,t,x='',s='')=>`<div class="fc ${x}" style="width:${a}px;height:${b}px;margin:${-b/2}px 0 0 ${-a/2}px;transform:${t};${s}"></div>`;
+function rot(st,q,H,lab){let ry=35,rx=-25;st.innerHTML=`<div class="sc3" id="s3">${H}</div>`;const s3=$('#s3'),up=()=>s3.style.transform=`rotateX(${rx}deg) rotateY(${ry}deg)`;up();
+const c=document.createElement('div');c.className='cnt';c.textContent=lab+': 0';st.append(c);hint(st,'✋ Geser untuk memutar · '+q.hint);
+s3.onclick=e=>{if(st.mv)return;const t=e.target.closest('.dw,.hit');if(!t)return;t.classList.toggle('on');fx.pop();c.textContent=lab+': '+$$('#s3 .on').length};
+drag(st,(dx,dy)=>{ry+=dx*.6;rx=Math.max(-85,Math.min(85,rx-dy*.6));up()})}
+V.prism=(st,q)=>{const tri='clip-path:polygon(50% 0,0 100%,100% 100%);border:0;';
+rot(st,q,FC(100,87,'translateZ(55px)','hit',tri)+FC(100,87,'rotateY(180deg) translateZ(55px)','hit',tri)+FC(100,110,'rotateX(-90deg) translateZ(43.5px)','hit')+FC(100,110,'translate3d(-25px,0,0) rotateZ(-60deg) rotateX(90deg)','hit')+FC(100,110,'translate3d(25px,0,0) rotateZ(60deg) rotateX(90deg)','hit'),'Terhitung')};
+V.cone=(st,q)=>{const n=28,R=55,Hh=100,Ls=Math.hypot(R,Hh),al=Math.atan(R/Hh)*180/Math.PI,w=2*Math.PI*R/n*1.2;let H='';
+for(let i=0;i<n;i++)H+=`<div class="sg" style="width:${w}px;height:${Ls}px;margin:${-Hh/2}px 0 0 ${-w/2}px;clip-path:polygon(50% 0,0 100%,100% 100%);transform-origin:50% 0;transform:rotateY(${i*360/n}deg) rotateX(${al}deg);background:${i%2?'#ffb23f':'#ff9a1f'}"></div>`;
+H+=FC(110,110,`rotateX(90deg) translateZ(-${Hh/2}px)`,'','border-radius:50%;background:#ffd93d')+`<div class="dw" style="transform:translate3d(0,${-Hh/2}px,0)"><u></u><u></u><u></u></div>`;
+rot(st,q,H,'Titik puncak')};
+V.cyl=(st,q)=>{const n=28,R=45,Hc=90,w=2*Math.PI*R/n*1.15;let H='';
+for(let i=0;i<n;i++)H+=`<div class="sg" style="width:${w}px;height:${Hc}px;margin:${-Hc/2}px 0 0 ${-w/2}px;transform:rotateY(${i*360/n}deg) translateZ(${R}px);background:${i%2?'#7ee081':'#5fd173'}"></div>`;
+H+=FC(2*R,2*R,`rotateX(90deg) translateZ(${Hc/2}px)`,'','border-radius:50%;background:#4dabff')+FC(2*R,2*R,`rotateX(90deg) translateZ(-${Hc/2}px)`,'','border-radius:50%;background:#4dabff');
+st.innerHTML=`<div class="cn"><svg class="p" viewBox="0 0 230 190"><circle cx="115" cy="30" r="24" fill="#4dabff" stroke="#fff" stroke-width="4"/><rect x="55" y="56" width="120" height="76" rx="4" fill="#7ee081" stroke="#fff" stroke-width="4"/><circle cx="115" cy="160" r="24" fill="#4dabff" stroke="#fff" stroke-width="4"/></svg><div class="q"><div class="sc3" id="s3">${H}</div></div></div>`;
+let ry=35,rx=-25;const s3=$('#s3'),up=()=>s3.style.transform=`rotateX(${rx}deg) rotateY(${ry}deg)`;up();
+slider(st,q,'✨ Terbentuk tabung!');drag(st,(dx,dy)=>{ry+=dx*.6;rx=Math.max(-85,Math.min(85,rx-dy*.6));up()})};
+/* materi */
+const M=[
+{h:`<h2 style="text-align:center;font-size:32px">📚 Kubus dan Balok</h2><p style="text-align:center">Sifat-sifat dan Jaring-jaring</p><p style="text-align:center">Matematika Kelas 5</p><p style="text-align:center;font-size:15px">Penyusun: Tita Dian Kurnia<br>NIM: 24206062</p>`},
+{h:`<h2>🎯 Tujuan Pembelajaran</h2><p>Setelah belajar, kamu bisa:</p><ol><li>Menjelaskan pengertian kubus dan balok.</li><li>Menyebutkan unsur-unsur kubus dan balok.</li><li>Mengenali sifat-sifat kubus dan balok.</li><li>Menjelaskan pengertian jaring-jaring kubus dan balok.</li><li>Membedakan jaring-jaring kubus dan balok.</li></ol>`},
+{h:`<h2>🧊 Mengenal Bangun Ruang</h2><p>Bangun ruang adalah bangun tiga dimensi yang memiliki panjang, lebar, dan tinggi serta mempunyai ruang di dalamnya.</p><p>Contohnya dadu, kotak sepatu, buku, dan kardus.</p>`},
+{h:`<h2>🎲 Kubus</h2><p>Kubus adalah bangun ruang tiga dimensi yang memiliki enam sisi berbentuk persegi dan seluruh sisinya sama besar.</p><p>Contoh: dadu, rubik, es batu, dan kotak hadiah.</p><p><b>Sifat-sifat kubus:</b></p><ul><li>Memiliki 6 sisi persegi yang sama besar.</li><li>Memiliki 12 rusuk yang sama panjang.</li><li>Memiliki 8 titik sudut.</li><li>Memiliki 12 diagonal bidang.</li><li>Memiliki 4 diagonal ruang.</li><li>Memiliki 6 bidang diagonal.</li></ul>`,v:'box',q:{m:'v',dim:[90,90,90],hint:'Ketuk titik sudut kubus. Ada berapa?'}},
+{h:`<h2>📦 Balok</h2><p>Balok adalah bangun ruang tiga dimensi yang memiliki enam sisi berbentuk persegi panjang. Sisi-sisi yang berhadapan memiliki bentuk dan ukuran yang sama.</p><p>Contoh: kotak pensil, buku, lemari, kardus, dan penghapus.</p><p><b>Sifat-sifat balok:</b></p><ul><li>Memiliki 6 sisi persegi panjang.</li><li>Memiliki 12 rusuk.</li><li>Memiliki 8 titik sudut.</li><li>Memiliki 12 diagonal bidang.</li><li>Memiliki 4 diagonal ruang.</li><li>Memiliki 6 bidang diagonal.</li></ul>`,v:'box',q:{m:'v',dim:[130,70,60],hint:'Ketuk titik sudut balok. Ada berapa?'}},
+{h:`<h2>🔎 Unsur-Unsur Kubus dan Balok</h2><ul><li><b>Sisi:</b> bidang yang membatasi bagian luar bangun ruang.</li><li><b>Rusuk:</b> garis pertemuan antara dua sisi.</li><li><b>Titik sudut:</b> titik pertemuan tiga rusuk atau lebih.</li></ul><div class="note">Kubus dan balok sama-sama punya 6 sisi, 12 rusuk, dan 8 titik sudut.</div>`,v:'box',q:{m:'e',dim:[90,90,90],hint:'Ketuk rusuk (garis merah). Ada berapa?'}},
+{h:`<h2>⚖️ Beda Kubus dan Balok</h2><table><tr><th>Pembeda</th><th>Kubus</th><th>Balok</th></tr><tr><td>Bentuk sisi</td><td>Persegi</td><td>Persegi panjang</td></tr><tr><td>Jumlah sisi</td><td>6</td><td>6</td></tr><tr><td>Jumlah rusuk</td><td>12</td><td>12</td></tr><tr><td>Titik sudut</td><td>8</td><td>8</td></tr><tr><td>Ukuran rusuk</td><td>Semua sama panjang</td><td>Tidak harus sama</td></tr></table>`},
+{h:`<h2>🧩 Jaring-Jaring Kubus</h2><p>Jaring-jaring kubus adalah gabungan enam persegi yang saling terhubung. Jika dilipat pada rusuk-rusuknya dengan susunan yang tepat, bentuknya menjadi kubus.</p><p><b>Ciri-cirinya:</b></p><ul><li>Terdiri dari 6 persegi yang sama besar.</li><li>Persegi-persegi saling terhubung.</li><li>Dapat dilipat menjadi kubus tanpa sisi bertumpuk.</li></ul>`,v:'net',q:{dim:[80,80,80],hint:'Geser tuas untuk melipat jaring-jaring kubus!'}},
+{h:`<h2>🧩 Jaring-Jaring Balok</h2><p>Jaring-jaring balok adalah gabungan enam sisi berbentuk persegi panjang, atau persegi panjang dan persegi, yang tersusun sehingga dapat dilipat menjadi balok.</p><p><b>Ciri-cirinya:</b></p><ul><li>Terdiri dari 6 sisi.</li><li>Sisi yang berhadapan sama bentuk dan ukurannya.</li><li>Dapat dilipat menjadi balok tanpa bertumpuk.</li></ul>`,v:'net',q:{dim:[120,60,80],hint:'Geser tuas untuk melipat jaring-jaring balok!'}},
+{h:`<h2>🆚 Beda Jaring-Jaring</h2><table><tr><th>Jaring-jaring kubus</th><th>Jaring-jaring balok</th></tr><tr><td>6 persegi yang sama besar</td><td>6 sisi, umumnya persegi panjang</td></tr><tr><td>Semua sisi sama bentuk dan ukuran</td><td>Sisi berhadapan sama bentuk dan ukuran</td></tr><tr><td>Dilipat jadi kubus</td><td>Dilipat jadi balok</td></tr></table><div class="note">Ingat: tidak semua susunan enam bangun datar bisa jadi jaring-jaring. Harus bisa dilipat tepat tanpa sisi yang bertumpuk.</div>`},
+{h:`<h2>🔍 Aktivitas 1: Tebak Bentuk Benda</h2><p>Benda ini berbentuk kubus atau balok?</p><div class="tb" data-a="0"><span class="e">🎲</span>Dadu<button class="btn s b" onclick="tb(this,0)">Kubus</button><button class="btn s" onclick="tb(this,1)">Balok</button></div><div class="tb" data-a="0"><span class="e">🧩</span>Rubik<button class="btn s b" onclick="tb(this,0)">Kubus</button><button class="btn s" onclick="tb(this,1)">Balok</button></div><div class="tb" data-a="1"><span class="e">📖</span>Buku<button class="btn s b" onclick="tb(this,0)">Kubus</button><button class="btn s" onclick="tb(this,1)">Balok</button></div><div class="tb" data-a="1"><span class="e">📦</span>Kotak sepatu<button class="btn s b" onclick="tb(this,0)">Kubus</button><button class="btn s" onclick="tb(this,1)">Balok</button></div>`},
+{h:`<h2>❓ Aktivitas 2: Kuis Cepat</h2><p>Jawab dulu dalam hati, lalu ketuk untuk melihat jawabannya!</p><details><summary>1. Berapa jumlah sisi pada kubus?</summary>Jawaban: 6 sisi.</details><details><summary>2. Berapa jumlah rusuk pada balok?</summary>Jawaban: 12 rusuk.</details><details><summary>3. Apa bentuk sisi-sisi kubus?</summary>Jawaban: Persegi.</details><details><summary>4. Jaring-jaring kubus terdiri dari berapa persegi?</summary>Jawaban: 6 persegi.</details><details><summary>5. Sebutkan satu contoh benda berbentuk balok!</summary>Jawaban: Misalnya buku, kardus, atau kotak pensil.</details>`},
+{h:`<h2>🌟 Kesimpulan</h2><p>Kubus dan balok sama-sama memiliki 6 sisi, 12 rusuk, dan 8 titik sudut. Kubus memiliki sisi persegi yang sama besar, sedangkan balok memiliki sisi persegi panjang dengan sisi berhadapan sama besar.</p><p>Jaring-jaring adalah bangun ruang yang dibentangkan sehingga seluruh sisinya terlihat. Jika susunannya tepat, jaring-jaring dapat dilipat kembali menjadi bangun ruang.</p><p style="text-align:center;margin-top:10px"><button class="btn g" onclick="renderMap();go('map')">🎮 Coba Quiz ▶</button></p>`}];
+let mi=0;
+function tb(b,g){const r=b.parentNode,ok=g==+r.dataset.a;b.classList.add(ok?'rt':'wr');ok?fx.ok():fx.bad();if(ok)r.querySelectorAll('button').forEach(x=>x.disabled=true)}
+function rm(){const p=M[mi],st=$('#mst');$('#mc').innerHTML=`<div class="mc">${p.h}</div>`;$('#mp').textContent=`${mi+1} / ${M.length}`;if(p.v){st.style.display='flex';V[p.v](st,p.q)}else{st.style.display='none';st.innerHTML=''}$('#materi').scrollTop=0;$('#mprev').style.visibility=mi?'visible':'hidden';$('#mnext').textContent=mi==M.length-1?'Selesai ✔':'Lanjut ▶'}
+function openM(){mi=0;go('materi');rm()}
+$('#mprev').onclick=()=>{mi--;rm()};$('#mnext').onclick=()=>{if(mi<M.length-1){mi++;rm()}else go('mode')};
+</script>
+</body>
+</html>
