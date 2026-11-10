@@ -1,0 +1,2113 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3xOSC Web Synthesizer - Pro Edition</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #080b11;
+    }
+    .digital-font {
+      font-family: 'Orbitron', 'Courier New', monospace;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #090d16;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #f97316;
+      border-radius: 3px;
+    }
+    .synth-knob {
+      touch-action: none;
+    }
+    .tab-active {
+      border-bottom: 2px solid #f97316;
+      color: #f97316;
+      text-shadow: 0 0 10px rgba(249, 115, 22, 0.4);
+    }
+    .sub-tab-active {
+      background-color: rgba(249, 115, 22, 0.2);
+      color: #f97316;
+      border-color: #f97316;
+    }
+    .toggle-checkbox:checked {
+      right: 0;
+      border-color: #f97316;
+    }
+    .toggle-checkbox:checked + .toggle-label {
+      background-color: #f97316;
+    }
+    /* Sembunyikan panah pada input number */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+  </style>
+</head>
+<body class="text-slate-200 h-screen w-screen flex flex-col justify-between overflow-hidden select-none pb-4">
+
+  <header class="h-16 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur px-6 flex items-center justify-between shrink-0 z-10 relative">
+    <div class="flex items-center gap-3">
+      <div class="bg-orange-500 text-slate-950 p-2 rounded-lg font-bold flex items-center justify-center shadow-lg shadow-orange-500/20">
+        <svg class="w-5 h-5 inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+      </div>
+      <div>
+        <h1 class="text-base font-extrabold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300 leading-none">
+          3xOSC SYNTHESIZER
+        </h1>
+        <p class="text-[10px] text-slate-400 font-semibold tracking-wider leading-none mt-1">Live Interactive Edition</p>
+      </div>
+    </div>
+
+    <!-- Panel Navigasi Modulator -->
+    <nav class="flex gap-1 h-full items-stretch">
+      <button onclick="switchTab('osc')" id="tab-btn-osc" class="tab-active px-3 lg:px-4 text-xs font-black tracking-wider uppercase transition-all duration-200 border-b-2 border-transparent hover:text-slate-100 flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 inline-block mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg> OSC
+      </button>
+      <button onclick="switchTab('lfo')" id="tab-btn-lfo" class="px-3 lg:px-4 text-xs font-black tracking-wider uppercase transition-all duration-200 border-b-2 border-transparent text-slate-400 hover:text-slate-100 flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 inline-block mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg> LFO
+      </button>
+      <button onclick="switchTab('adsr')" id="tab-btn-adsr" class="px-3 lg:px-4 text-xs font-black tracking-wider uppercase transition-all duration-200 border-b-2 border-transparent text-slate-400 hover:text-slate-100 flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 inline-block mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 6-8"/></svg> ENV
+      </button>
+      <button onclick="switchTab('matrix')" id="tab-btn-matrix" class="px-3 lg:px-4 text-xs font-black tracking-wider uppercase transition-all duration-200 border-b-2 border-transparent text-slate-400 hover:text-slate-100 flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 inline-block mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="12" x2="21" y2="12"></line><line x1="12" y1="3" x2="12" y2="21"></line></svg> MATRIX
+      </button>
+      <button onclick="switchTab('filter')" id="tab-btn-filter" class="px-3 lg:px-4 text-xs font-black tracking-wider uppercase transition-all duration-200 border-b-2 border-transparent text-slate-400 hover:text-slate-100 flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 inline-block mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg> FILTER
+      </button>
+      <button onclick="switchTab('effects')" id="tab-btn-effects" class="px-3 lg:px-4 text-xs font-black tracking-wider uppercase transition-all duration-200 border-b-2 border-transparent text-slate-400 hover:text-slate-100 flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 inline-block mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.7 14.3L12 5l6.3 6.3-9.3 9.3a2.1 2.1 0 0 1-3 0l-3.3-3.3a2.1 2.1 0 0 1 0-3z"></path><path d="M14 7l3-3"></path><path d="M19 12l2-2"></path></svg> EFEK
+      </button>
+    </nav>
+
+    <!-- Menu Memori & Info Sistem -->
+    <div class="flex gap-3 items-center">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-lg px-2 py-1 text-center min-w-[90px] flex flex-col justify-center">
+        <div class="text-[7px] text-slate-500 font-bold tracking-wider mb-0.5">FACTORY PRESET</div>
+        <select id="factory-presets" onchange="loadFactoryPreset(this.value)" class="bg-slate-950 text-orange-400 text-[10px] font-bold border border-slate-800 rounded px-1 py-0.5 outline-none w-full text-center cursor-pointer">
+          <option value="">-- Pilih --</option>
+          <option value="init">Init</option>
+          <option value="pluck">Pluck</option>
+          <option value="pad">Pad</option>
+          <option value="lead">Lead Synth</option>
+          <option value="bass">Sub Bass</option>
+          <option value="keys">Synth Keys</option>
+          <option value="brass">Synth Brass</option>
+          <option value="strings">Synth Strings</option>
+        </select>
+      </div>
+      <div class="flex flex-col gap-1 mr-2 bg-slate-900/60 p-1.5 rounded-lg border border-slate-800">
+        <div class="flex gap-1.5">
+          <button onclick="savePresetFile()" class="text-[8px] bg-slate-800/80 text-slate-300 hover:text-orange-400 hover:bg-slate-800 font-bold px-1.5 py-0.5 rounded transition flex items-center gap-1">
+            <svg class="w-2.5 h-2.5 inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg> BERKAS
+          </button>
+          <button onclick="document.getElementById('preset-upload').click()" class="text-[8px] bg-slate-800/80 text-slate-300 hover:text-orange-400 hover:bg-slate-800 font-bold px-1.5 py-0.5 rounded transition flex items-center gap-1">
+            <svg class="w-2.5 h-2.5 inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> BERKAS
+          </button>
+          <input type="file" id="preset-upload" accept=".json" class="hidden">
+        </div>
+        <div class="flex gap-1.5">
+          <button onclick="savePresetLocal()" class="text-[8px] bg-slate-800/80 text-slate-300 hover:text-orange-400 hover:bg-slate-800 font-bold px-1.5 py-0.5 rounded transition flex items-center gap-1 w-full justify-center">
+            <svg class="w-2.5 h-2.5 inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg> SIMPAN
+          </button>
+          <button onclick="loadPresetLocal()" class="text-[8px] bg-slate-800/80 text-slate-300 hover:text-orange-400 hover:bg-slate-800 font-bold px-1.5 py-0.5 rounded transition flex items-center gap-1 w-full justify-center">
+            <svg class="w-2.5 h-2.5 inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg> MUAT
+          </button>
+        </div>
+      </div>
+      
+      <div class="bg-slate-900/80 border border-slate-800 rounded-lg px-2 lg:px-3 py-1 text-center min-w-[60px]">
+        <div class="text-[8px] lg:text-[9px] text-slate-500 font-semibold tracking-wider">TUNE (A4)</div>
+        <input type="number" id="base-tuning-input" value="440" class="w-10 bg-transparent text-sm font-bold text-orange-400 digital-font text-center focus:outline-none appearance-none cursor-text m-0 p-0" onchange="updateBaseTuning()" />
+      </div>
+      <div class="bg-slate-900/80 border border-slate-800 rounded-lg px-2 lg:px-3 py-1 text-center min-w-[60px]">
+        <div class="text-[8px] lg:text-[9px] text-slate-500 font-semibold tracking-wider">OKTAF</div>
+        <div id="octave-display" class="text-sm font-bold text-orange-400 digital-font">5</div>
+      </div>
+      <div class="bg-slate-900/80 border border-slate-800 rounded-lg px-2 lg:px-3 py-1 text-center min-w-[60px]">
+        <div class="text-[8px] lg:text-[9px] text-slate-500 font-semibold tracking-wider">TRANSPOS</div>
+        <div id="transpose-display" class="text-sm font-bold text-orange-400 digital-font">0 st</div>
+      </div>
+      <div class="bg-slate-900/80 border border-slate-800 rounded-lg px-3 lg:px-4 py-1 text-center min-w-[100px]">
+        <div class="text-[8px] lg:text-[9px] text-slate-500 font-semibold tracking-wider">TOMBOL AKTIF</div>
+        <div id="active-key-display" class="text-sm font-bold text-amber-400 truncate max-w-[90px]">-</div>
+      </div>
+    </div>
+  </header>
+
+  <div id="audio-init-overlay" class="fixed inset-0 bg-slate-950/95 z-50 flex flex-col items-center justify-center p-6 transition-opacity duration-300">
+    <div class="bg-slate-900/90 border border-slate-800/80 p-8 rounded-2xl max-w-sm w-full text-center shadow-2xl backdrop-blur">
+      <div class="text-orange-500 text-6xl mb-4 animate-bounce flex justify-center">
+        <svg class="w-16 h-16 inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"></polygon></svg>
+      </div>
+      <h2 class="text-2xl font-black tracking-wide mb-2 text-white">AKTIFKAN AUDIO</h2>
+      <p class="text-slate-400 text-xs mb-6 leading-relaxed">
+        Web Audio memerlukan interaksi pengguna. Klik tombol di bawah untuk menyalakan mesin sintesis.
+      </p>
+      <button id="btn-start-audio" class="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-slate-950 font-black rounded-xl transition-all duration-200 shadow-lg uppercase tracking-widest text-xs">
+        Mulai Synthesizer
+      </button>
+    </div>
+  </div>
+
+  <main class="flex-grow p-4 max-w-full mx-auto w-full grid grid-cols-12 gap-4 items-stretch overflow-hidden relative">
+    
+    <div class="col-span-8 h-full relative overflow-hidden">
+      
+      <!-- PANEL 1: OSILATOR -->
+      <div id="panel-osc" class="absolute inset-0 flex flex-col justify-between gap-3 transition-all duration-350">
+        <!-- OSC 1 -->
+        <div class="bg-gradient-to-br from-slate-900/60 to-slate-950/40 border border-slate-800/80 rounded-2xl p-4 relative overflow-hidden flex-grow flex flex-col justify-center shadow-xl">
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-blue-500"></div>
+          <div class="flex items-center justify-between mb-2 shrink-0">
+            <h3 class="text-xs font-extrabold text-blue-400 flex items-center gap-2 tracking-wider leading-none">
+              <span class="bg-blue-500/10 text-blue-400 px-2 py-1 rounded-md text-[10px] font-black">OSC 1</span> Master Utama
+            </h3>
+          </div>
+          <div class="grid grid-cols-7 gap-1 lg:gap-2 items-center flex-grow">
+            <div class="flex flex-col gap-1 col-span-2">
+              <span class="text-[9px] font-black text-slate-400 tracking-wider uppercase">Bentuk Gelombang</span>
+              <div class="grid grid-cols-5 gap-1 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800">
+                <button onclick="setOscShape(1, 'sine')" id="osc1-shape-sine" class="osc-shape-btn py-2 rounded-lg bg-blue-500/20 text-blue-400"><svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c3-8 6-8 9 0s6 8 9 0"></path></svg></button>
+                <button onclick="setOscShape(1, 'triangle')" id="osc1-shape-triangle" class="osc-shape-btn py-2 rounded-lg text-slate-400 hover:bg-slate-800"><svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 16 8 4 16 20 21 8"></polyline></svg></button>
+                <button onclick="setOscShape(1, 'sawtooth')" id="osc1-shape-sawtooth" class="osc-shape-btn py-2 rounded-lg text-slate-400 hover:bg-slate-800"><svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 20 12 4 12 20 21 4"></polyline></svg></button>
+                <button onclick="setOscShape(1, 'square')" id="osc1-shape-square" class="osc-shape-btn py-2 rounded-lg text-slate-400 hover:bg-slate-800"><svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 16 3 8 12 8 12 16 21 16 21 8"></polyline></svg></button>
+                <button onclick="setOscShape(1, 'noise')" id="osc1-shape-noise" class="osc-shape-btn py-2 rounded-lg text-slate-400 hover:bg-slate-800"><svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="6" r="1.5"/><circle cx="12" cy="18" r="1.5"/><circle cx="18" cy="8" r="1.5"/><circle cx="8" cy="15" r="1.5"/><circle cx="16" cy="14" r="1.5"/></svg></button>
+              </div>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+              <span class="text-[9px] font-black text-slate-400 tracking-wider uppercase">Coarse</span>
+              <div class="synth-knob w-10 h-10 lg:w-14 lg:h-14" id="osc1-coarse" data-min="-24" data-max="24" data-value="0" data-step="1" data-snap="[-24, -12, 0, 12, 24]" data-color="#3b82f6"></div>
+              <span id="osc1-coarse-val" class="text-[10px] text-blue-400 digital-font font-bold">0 st</span>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+              <span class="text-[9px] font-black text-slate-400 tracking-wider uppercase">Fine</span>
+              <div class="synth-knob w-10 h-10 lg:w-14 lg:h-14" id="osc1-fine" data-min="-99" data-max="99" data-value="0" data-step="1" data-snap="[0]" data-color="#3b82f6"></div>
+              <span id="osc1-fine-val" class="text-[10px] text-blue-400 digital-font font-bold">0 ct</span>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+              <span class="text-[9px] font-black text-slate-400 tracking-wider uppercase">Unison</span>
+              <div class="synth-knob w-10 h-10 lg:w-14 lg:h-14" id="osc1-voices" data-min="1" data-max="7" data-value="1" data-step="1" data-snap="[1, 3, 5, 7]" data-color="#3b82f6"></div>
+              <span id="osc1-voices-val" class="text-[10px] text-blue-400 digital-font font-bold">1</span>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+              <span class="text-[9px] font-black text-slate-400 tracking-wider uppercase">Spread</span>
+              <div class="synth-knob w-10 h-10 lg:w-14 lg:h-14" id="osc1-detune" data-min="0" data-max="1" data-step="0.01" data-value="0.15" data-color="#3b82f6"></div>
+              <span id="osc1-detune-val" class="text-[10px] text-blue-400 digital-font font-bold">15%</span>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+              <span class="text-[9px] font-black text-slate-400 tracking-wider uppercase">Volume</span>
+              <div class="synth-knob w-10 h-10 lg:w-14 lg:h-14" id="osc1-vol" data-min="0" data-max="1" data-step="0.01" data-value="0.8" data-snap="[0, 0.5, 1.0]" data-color="#3b82f6"></div>
+              <span id="osc1-vol-val" class="text-[10px] text-blue-400 digital-font font-bold">80%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- OSC 2 -->
+        <div class="bg-gradient-to-br from-slate-900/60 to-slate-950/40 border border-slate-800/80 rounded-2xl p-4 relative overflow-hidden flex-grow flex flex-col justify-center shadow-xl">
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-emerald-500"></div>
+          <div class="flex items-center justify-between mb-2 shrink-0">
+            <h3 class="text-xs font-extrabold text-emerald-400 flex items-center gap-2 tracking-wider leading-none">
+              <span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded-md text-[10px] font-black">OSC 2</span> Sub Bass
+            </h3>
+          </div>
+          <div class="grid grid-cols-7 gap-1 lg:gap-2 items-center flex-grow">
+            <div class="flex flex-col gap-1 col-span-2">
+              <span class="text-[9px] font-black text-slate-400 tracking-wider uppercase">Bentuk Gelombang</span>
+              <div class="grid grid-cols-5 gap-1 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800">
+                <button onclick="setOscShape(2, 'sine')" id="osc2-shape-sine" class="osc-shape-btn py-2 rounded-lg text-slate-400 hover:bg-slate-800"><svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c3-8 6-8 9 0s6 8 9 0"></path></svg></button>
+                <button onclick="setOscShape(2, 'triangle')" id="osc2-shape-triangle" class="osc-shape-btn py-2 rounded-lg text-slate-400 hover:bg-slate-800"><svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 16 8 4 16 20 21 8"></polyline></svg></button>
+                <button onclick="setOscShape(2, 'sawtooth')" id="osc2-shape-sawtooth" class="osc-shape-btn py-2 rounded-lg bg-emerald-500/20 text-emerald-400"><svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 20 12 4 12 20 21 4"></polyline></svg></button>
+                <button onclick="setOscShape(2, 'square')" id="osc2-shape-square" class="osc-shape-btn py-2 rounded-lg text-slate-400 hover:bg-slate-800"><svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 16 3 8 12 8 12 16 21 16 21 8"></polyline></svg></button>
+                <button onclick="setOscShape(2, 'noise')" id="osc2-shape-noise" class="osc-shape-btn py-2 rounded-lg text-slate-400 hover:bg-slate-800"><svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="6" r="1.5"/><circle cx="12" cy="18" r="1.5"/><circle cx="18" cy="8" r="1.5"/><circle cx="8" cy="15" r="1.5"/><circle cx="16" cy="14" r="1.5"/></svg></button>
+              </div>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+              <span class="text-[9px] font-black text-slate-400 tracking-wider uppercase">Coarse</span>
+              <div class="synth-knob w-10 h-10 lg:w-14 lg:h-14" id="osc2-coarse" data-min="-24" data-max="24" data-value="-12" data-step="1" data-snap="[-24, -12, 0, 12, 24]" data-color="#10b981"></div>
+              <span id="osc2-coarse-val" class="text-[10px] text-emerald-400 digital-font font-bold">-12 st</span>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+              <span class="text-[9px] font-black text-slate-400 tracking-wider uppercase">Fine</span>
+              <div class="synth-knob w-10 h-10 lg:w-14 lg:h-14" id="osc2-fine" data-min="-99" data-max="99" data-value="0" data-step="1" data-snap="[0]" data-color="#10b981"></div>
+              <span id="osc2-fine-val" class="text-[10px] text-emerald-400 digital-font font-bold">0 ct</span>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+              <span class="text-[9px] font-black text-slate-400 tracking-wider uppercase">Unison</span>
+              <div class="synth-knob w-10 h-10 lg:w-14 lg:h-14" id="osc2-voices" data-min="1" data-max="7" data-value="1" data-step="1" data-snap="[1, 3, 5, 7]" data-color="#10b981"></div>
+              <span id="osc2-voices-val" class="text-[10px] text-emerald-400 digital-font font-bold">1</span>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+              <span class="text-[9px] font-black text-slate-400 tracking-wider uppercase">Spread</span>
+              <div class="synth-knob w-10 h-10 lg:w-14 lg:h-14" id="osc2-detune" data-min="0" data-max="1" data-step="0.01" data-value="0.0" data-color="#10b981"></div>
+              <span id="osc2-detune-val" class="text-[10px] text-emerald-400 digital-font font-bold">0%</span>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+              <span class="text-[9px] font-black text-slate-400 tracking-wider uppercase">Volume</span>
+              <div class="synth-knob w-10 h-10 lg:w-14 lg:h-14" id="osc2-vol" data-min="0" data-max="1" data-step="0.01" data-value="0.6" data-snap="[0, 0.5, 1.0]" data-color="#10b981"></div>
+              <span id="osc2-vol-val" class="text-[10px] text-emerald-400 digital-font font-bold">60%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- OSC 3 -->
+        <div class="bg-gradient-to-br from-slate-900/60 to-slate-950/40 border border-slate-800/80 rounded-2xl p-4 relative overflow-hidden flex-grow flex flex-col justify-center shadow-xl">
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-violet-500"></div>
+          <div class="flex items-center justify-between mb-2 shrink-0">
+            <h3 class="text-xs font-extrabold text-violet-400 flex items-center gap-2 tracking-wider leading-none">
+              <span class="bg-violet-500/10 text-violet-400 px-2 py-1 rounded-md text-[10px] font-black">OSC 3</span> Noise Tekstur
+            </h3>
+          </div>
+          <div class="grid grid-cols-7 gap-1 lg:gap-2 items-center flex-grow">
+            <div class="flex flex-col gap-1 col-span-2">
+              <span class="text-[9px] font-black text-slate-400 tracking-wider uppercase">Bentuk Gelombang</span>
+              <div class="grid grid-cols-5 gap-1 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800">
+                <button onclick="setOscShape(3, 'sine')" id="osc3-shape-sine" class="osc-shape-btn py-2 rounded-lg text-slate-400 hover:bg-slate-800"><svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c3-8 6-8 9 0s6 8 9 0"></path></svg></button>
+                <button onclick="setOscShape(3, 'triangle')" id="osc3-shape-triangle" class="osc-shape-btn py-2 rounded-lg text-slate-400 hover:bg-slate-800"><svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 16 8 4 16 20 21 8"></polyline></svg></button>
+                <button onclick="setOscShape(3, 'sawtooth')" id="osc3-shape-sawtooth" class="osc-shape-btn py-2 rounded-lg text-slate-400 hover:bg-slate-800"><svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 20 12 4 12 20 21 4"></polyline></svg></button>
+                <button onclick="setOscShape(3, 'square')" id="osc3-shape-square" class="osc-shape-btn py-2 rounded-lg text-slate-400 hover:bg-slate-800"><svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 16 3 8 12 8 12 16 21 16 21 8"></polyline></svg></button>
+                <button onclick="setOscShape(3, 'noise')" id="osc3-shape-noise" class="osc-shape-btn py-2 rounded-lg bg-violet-500/20 text-violet-400"><svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="6" r="1.5"/><circle cx="12" cy="18" r="1.5"/><circle cx="18" cy="8" r="1.5"/><circle cx="8" cy="15" r="1.5"/><circle cx="16" cy="14" r="1.5"/></svg></button>
+              </div>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+              <span class="text-[9px] font-black text-slate-400 tracking-wider uppercase">Coarse</span>
+              <div class="synth-knob w-10 h-10 lg:w-14 lg:h-14" id="osc3-coarse" data-min="-24" data-max="24" data-value="0" data-step="1" data-snap="[-24, -12, 0, 12, 24]" data-color="#8b5cf6"></div>
+              <span id="osc3-coarse-val" class="text-[10px] text-violet-400 digital-font font-bold">0 st</span>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+              <span class="text-[9px] font-black text-slate-400 tracking-wider uppercase">Fine</span>
+              <div class="synth-knob w-10 h-10 lg:w-14 lg:h-14" id="osc3-fine" data-min="-99" data-max="99" data-value="15" data-step="1" data-snap="[0]" data-color="#8b5cf6"></div>
+              <span id="osc3-fine-val" class="text-[10px] text-violet-400 digital-font font-bold">15 ct</span>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+              <span class="text-[9px] font-black text-slate-400 tracking-wider uppercase">Unison</span>
+              <div class="synth-knob w-10 h-10 lg:w-14 lg:h-14" id="osc3-voices" data-min="1" data-max="7" data-value="1" data-step="1" data-snap="[1, 3, 5, 7]" data-color="#8b5cf6"></div>
+              <span id="osc3-voices-val" class="text-[10px] text-violet-400 digital-font font-bold">1</span>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+              <span class="text-[9px] font-black text-slate-400 tracking-wider uppercase">Spread</span>
+              <div class="synth-knob w-10 h-10 lg:w-14 lg:h-14" id="osc3-detune" data-min="0" data-max="1" data-step="0.01" data-value="0.0" data-color="#8b5cf6"></div>
+              <span id="osc3-detune-val" class="text-[10px] text-violet-400 digital-font font-bold">0%</span>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+              <span class="text-[9px] font-black text-slate-400 tracking-wider uppercase">Volume</span>
+              <div class="synth-knob w-10 h-10 lg:w-14 lg:h-14" id="osc3-vol" data-min="0" data-max="1" data-step="0.01" data-value="0.05" data-snap="[0, 0.5, 1.0]" data-color="#8b5cf6"></div>
+              <span id="osc3-vol-val" class="text-[10px] text-violet-400 digital-font font-bold">5%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL 2: LFO MODULATOR -->
+      <div id="panel-lfo" class="absolute inset-0 flex flex-col justify-between gap-4 transition-all duration-350 hidden">
+        <div class="bg-gradient-to-br from-slate-900/60 to-slate-950/40 border border-slate-800/80 rounded-2xl p-6 flex-grow flex flex-col shadow-xl relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-orange-500"></div>
+          <div class="flex items-center justify-between mb-6 shrink-0 border-b border-slate-800 pb-3">
+            <h3 class="text-sm font-extrabold text-orange-400 flex items-center gap-3 tracking-wider">
+              <svg class="w-4 h-4 inline-block mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg> MESIN MULTI-LFO
+            </h3>
+            <div class="flex gap-2 bg-slate-950/80 p-1 rounded-lg border border-slate-800">
+              <button onclick="selectLfo(0)" id="lfo-tab-0" class="sub-tab-active px-4 py-1.5 rounded-md text-[10px] font-black tracking-wider transition">LFO 1</button>
+              <button onclick="selectLfo(1)" id="lfo-tab-1" class="text-slate-400 hover:text-slate-200 px-4 py-1.5 rounded-md text-[10px] font-black tracking-wider transition">LFO 2</button>
+              <button onclick="selectLfo(2)" id="lfo-tab-2" class="text-slate-400 hover:text-slate-200 px-4 py-1.5 rounded-md text-[10px] font-black tracking-wider transition">LFO 3</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-12 gap-8 flex-grow items-center">
+            <div class="col-span-3 flex flex-col gap-6">
+              <div>
+                <span class="text-[10px] font-black text-slate-400 tracking-wider uppercase block mb-2">Bentuk Gelombang</span>
+                <div class="grid grid-cols-2 gap-2 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800">
+                  <button onclick="setLfoShape('sine')" id="lfo-shape-sine" class="py-2.5 rounded-lg bg-orange-500/20 text-orange-400"><svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c3-8 6-8 9 0s6 8 9 0"></path></svg></button>
+                  <button onclick="setLfoShape('triangle')" id="lfo-shape-triangle" class="py-2.5 rounded-lg text-slate-400 hover:bg-slate-800"><svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 16 8 4 16 20 21 8"></polyline></svg></button>
+                  <button onclick="setLfoShape('sawtooth')" id="lfo-shape-sawtooth" class="py-2.5 rounded-lg text-slate-400 hover:bg-slate-800"><svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 20 12 4 12 20 21 4"></polyline></svg></button>
+                  <button onclick="setLfoShape('square')" id="lfo-shape-square" class="py-2.5 rounded-lg text-slate-400 hover:bg-slate-800"><svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 16 3 8 12 8 12 16 21 16 21 8"></polyline></svg></button>
+                </div>
+              </div>
+            </div>
+            <div class="col-span-3 flex flex-col justify-center gap-4">
+              <div class="flex flex-col items-center gap-2">
+                <span class="text-[10px] font-black text-slate-400 tracking-wider uppercase">Kecepatan (Rate)</span>
+                <div class="synth-knob w-20 h-20" id="lfo-rate" data-min="0.1" data-max="20" data-step="0.001" data-value="3.0" data-snap="[1.0, 5.0]" data-color="#f97316"></div>
+                <span id="lfo-rate-val" class="text-sm text-orange-400 digital-font font-bold">3.000 Hz</span>
+              </div>
+            </div>
+            <div class="col-span-6 h-full flex flex-col justify-center gap-2">
+              <div class="flex justify-between items-end">
+                 <span class="text-[10px] font-black text-slate-400 tracking-wider uppercase">Monitor LFO</span>
+                 <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider bg-slate-900 px-2 py-0.5 rounded">Gunakan Tab Matrix untuk Routing</span>
+              </div>
+              <div class="bg-slate-950 border border-slate-800 rounded-2xl p-2 h-48 relative overflow-hidden">
+                <canvas id="lfoCanvas" class="w-full h-full block"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL 3: 3x ADSR ENVELOPE -->
+      <div id="panel-adsr" class="absolute inset-0 flex flex-col justify-between gap-4 transition-all duration-350 hidden">
+        <div class="bg-gradient-to-br from-slate-900/60 to-slate-950/40 border border-slate-800/80 rounded-2xl p-6 flex-grow flex flex-col shadow-xl relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-violet-500"></div>
+          <div class="flex items-center justify-between mb-6 shrink-0 border-b border-slate-800 pb-3">
+            <h3 class="text-sm font-extrabold text-violet-400 flex items-center gap-3 tracking-wider">
+              <svg class="w-4 h-4 inline-block mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 6-8"/></svg> MULTI-ENVELOPE GENERATOR
+            </h3>
+            <div class="flex gap-2 bg-slate-950/80 p-1 rounded-lg border border-slate-800">
+              <button onclick="selectEnv(0)" id="env-tab-0" class="sub-tab-active px-3 py-1 rounded-md text-[10px] font-black tracking-wider transition">ENV 1</button>
+              <button onclick="selectEnv(1)" id="env-tab-1" class="text-slate-400 hover:text-slate-200 px-3 py-1 rounded-md text-[10px] font-black tracking-wider transition">ENV 2</button>
+              <button onclick="selectEnv(2)" id="env-tab-2" class="text-slate-400 hover:text-slate-200 px-3 py-1 rounded-md text-[10px] font-black tracking-wider transition">ENV 3</button>
+            </div>
+          </div>
+          <div class="grid grid-cols-12 gap-8 flex-grow items-center">
+            <div class="col-span-5 flex flex-col gap-6 justify-center">
+              <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col items-center gap-1.5">
+                  <span class="text-[10px] font-black text-slate-400 uppercase">Attack</span>
+                  <div class="synth-knob w-16 h-16" id="adsr-attack" data-min="0.001" data-max="5.0" data-step="0.01" data-value="0.1" data-color="#8b5cf6"></div>
+                  <span id="adsr-attack-val" class="text-[10px] text-violet-400 font-bold">0.1s</span>
+                </div>
+                <div class="flex flex-col items-center gap-1.5">
+                  <span class="text-[10px] font-black text-slate-400 uppercase">Decay</span>
+                  <div class="synth-knob w-16 h-16" id="adsr-decay" data-min="0.01" data-max="5.0" data-step="0.01" data-value="0.3" data-color="#8b5cf6"></div>
+                  <span id="adsr-decay-val" class="text-[10px] text-violet-400 font-bold">0.3s</span>
+                </div>
+                <div class="flex flex-col items-center gap-1.5">
+                  <span class="text-[10px] font-black text-slate-400 uppercase">Sustain</span>
+                  <div class="synth-knob w-16 h-16" id="adsr-sustain" data-min="0" data-max="1.0" data-step="0.01" data-value="0.7" data-color="#8b5cf6"></div>
+                  <span id="adsr-sustain-val" class="text-[10px] text-violet-400 font-bold">70%</span>
+                </div>
+                <div class="flex flex-col items-center gap-1.5">
+                  <span class="text-[10px] font-black text-slate-400 uppercase">Release</span>
+                  <div class="synth-knob w-16 h-16" id="adsr-release" data-min="0.001" data-max="5.0" data-step="0.01" data-value="0.5" data-color="#8b5cf6"></div>
+                  <span id="adsr-release-val" class="text-[10px] text-violet-400 font-bold">0.5s</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-span-7 flex flex-col gap-2 justify-center h-full">
+              <div class="flex justify-between items-end">
+                 <span class="text-[10px] font-black text-slate-400 tracking-wider uppercase">Kurva Envelope</span>
+                 <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider bg-slate-900 px-2 py-0.5 rounded">Gunakan Tab Matrix untuk Routing</span>
+              </div>
+              <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3 h-48 relative overflow-hidden">
+                <canvas id="adsrCanvas" class="w-full h-full block"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL MATRIX -->
+      <div id="panel-matrix" class="absolute inset-0 flex flex-col justify-between gap-4 transition-all duration-350 hidden">
+        <div class="bg-gradient-to-br from-slate-900/60 to-slate-950/40 border border-slate-800/80 rounded-2xl p-6 flex-grow flex flex-col shadow-xl relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-yellow-500"></div>
+          <div class="flex items-center justify-between mb-4 shrink-0 border-b border-slate-800 pb-3">
+            <h3 class="text-sm font-extrabold text-yellow-400 flex items-center gap-3 tracking-wider">
+              <svg class="w-4 h-4 inline-block mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="12" x2="21" y2="12"></line><line x1="12" y1="3" x2="12" y2="21"></line></svg> MATRIKS MODULASI (SYTRUS MODE)
+            </h3>
+            <span class="text-[9px] text-slate-500 font-bold tracking-wider">ROUTING MULTI-TARGET BIPOLAR (-1 HINGGA 1)</span>
+          </div>
+
+          <!-- Mod Matrix Grid (Memiliki Scroll Horisontal untuk menampung banyak parameter) -->
+          <div class="overflow-x-auto w-full pb-2">
+            <div class="grid gap-x-2 gap-y-3 flex-grow content-center min-w-[850px]" id="matrix-grid" style="grid-template-columns: 50px repeat(15, minmax(40px, 1fr));">
+              <!-- Headers -->
+              <div></div>
+              <div class="text-[9px] font-black text-slate-500 text-center tracking-widest uppercase pb-2 border-b border-slate-800">GLB<br>VOL</div>
+              <div class="text-[9px] font-black text-slate-500 text-center tracking-widest uppercase pb-2 border-b border-slate-800">GLB<br>PIT</div>
+              <div class="text-[9px] font-black text-slate-500 text-center tracking-widest uppercase pb-2 border-b border-slate-800">CUT<br>OFF</div>
+              <div class="text-[9px] font-black text-slate-500 text-center tracking-widest uppercase pb-2 border-b border-slate-800">OSC1<br>VOL</div>
+              <div class="text-[9px] font-black text-slate-500 text-center tracking-widest uppercase pb-2 border-b border-slate-800">OSC2<br>VOL</div>
+              <div class="text-[9px] font-black text-slate-500 text-center tracking-widest uppercase pb-2 border-b border-slate-800">OSC3<br>VOL</div>
+              <div class="text-[9px] font-black text-slate-500 text-center tracking-widest uppercase pb-2 border-b border-slate-800">OSC1<br>PIT</div>
+              <div class="text-[9px] font-black text-slate-500 text-center tracking-widest uppercase pb-2 border-b border-slate-800">OSC2<br>PIT</div>
+              <div class="text-[9px] font-black text-slate-500 text-center tracking-widest uppercase pb-2 border-b border-slate-800">OSC3<br>PIT</div>
+              <div class="text-[9px] font-black text-slate-500 text-center tracking-widest uppercase pb-2 border-b border-slate-800">LFO1<br>RATE</div>
+              <div class="text-[9px] font-black text-slate-500 text-center tracking-widest uppercase pb-2 border-b border-slate-800">LFO2<br>RATE</div>
+              <div class="text-[9px] font-black text-slate-500 text-center tracking-widest uppercase pb-2 border-b border-slate-800">LFO3<br>RATE</div>
+              <div class="text-[9px] font-black text-slate-500 text-center tracking-widest uppercase pb-2 border-b border-slate-800">LFO1<br>DPTH</div>
+              <div class="text-[9px] font-black text-slate-500 text-center tracking-widest uppercase pb-2 border-b border-slate-800">LFO2<br>DPTH</div>
+              <div class="text-[9px] font-black text-slate-500 text-center tracking-widest uppercase pb-2 border-b border-slate-800">LFO3<br>DPTH</div>
+              <!-- Rows akan di-generate via JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL 4: FILTER MASTER -->
+      <div id="panel-filter" class="absolute inset-0 flex flex-col justify-between gap-4 transition-all duration-350 hidden">
+        <div class="bg-gradient-to-br from-slate-900/60 to-slate-950/40 border border-slate-800/80 rounded-2xl p-8 flex-grow flex flex-col justify-center shadow-xl relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-pink-500"></div>
+          <div class="flex items-center justify-between mb-8 shrink-0">
+            <h3 class="text-base font-extrabold text-pink-400 flex items-center gap-3 tracking-wider leading-none">
+              <svg class="w-5 h-5 inline-block mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg> STAGE FILTER ANALOG MASTER
+            </h3>
+            <span class="text-[10px] text-slate-500 font-bold tracking-wider">RESPON BIQUAD HALUS</span>
+          </div>
+          <div class="grid grid-cols-12 gap-8 flex-grow">
+            <div class="col-span-5 bg-slate-950/60 p-6 rounded-2xl border border-slate-850 flex flex-col gap-6 justify-center">
+              <div>
+                <span class="text-xs font-black text-slate-400 tracking-wider uppercase block mb-3">Mode Filter</span>
+                <div class="grid grid-cols-3 gap-2 bg-slate-950 p-2 rounded-xl border border-slate-900">
+                  <button onclick="setFilterType('lowpass')" id="filter-lp" class="py-3 rounded-lg text-xs font-bold bg-pink-500/20 text-pink-400 transition">LOWPASS</button>
+                  <button onclick="setFilterType('highpass')" id="filter-hp" class="py-3 rounded-lg text-xs font-bold text-slate-400 hover:bg-slate-800 transition">HIGHPASS</button>
+                  <button onclick="setFilterType('bandpass')" id="filter-bp" class="py-3 rounded-lg text-xs font-bold text-slate-400 hover:bg-slate-800 transition">BANDPASS</button>
+                </div>
+              </div>
+            </div>
+            <div class="col-span-7 bg-slate-950/60 p-6 rounded-2xl border border-slate-850 flex justify-around items-center">
+              <div class="flex flex-col items-center gap-3">
+                <span class="text-xs text-slate-400 font-bold uppercase">Frekuensi Cutoff</span>
+                <div class="synth-knob w-28 h-28" id="filter-cutoff" data-min="20" data-max="20000" data-step="10" data-value="20000" data-color="#ec4899"></div>
+                <span id="filter-cutoff-val" class="text-base text-pink-400 font-bold digital-font">20000 Hz</span>
+              </div>
+              <div class="flex flex-col items-center gap-3">
+                <span class="text-xs text-slate-400 font-bold uppercase">Resonansi (Q)</span>
+                <div class="synth-knob w-28 h-28" id="filter-q" data-min="0.1" data-max="20" data-step="0.1" data-value="1.0" data-color="#ec4899"></div>
+                <span id="filter-q-val" class="text-base text-pink-400 font-bold digital-font">1.0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL 5: EFEK -->
+      <div id="panel-effects" class="absolute inset-0 flex flex-col justify-between gap-4 transition-all duration-350 hidden">
+        <div class="bg-gradient-to-br from-slate-900/60 to-slate-950/40 border border-slate-800/80 rounded-2xl p-6 flex-grow flex flex-col justify-between shadow-xl relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-amber-500"></div>
+
+          <div class="flex items-center justify-between mb-4 shrink-0">
+            <h3 class="text-sm font-extrabold text-amber-400 flex items-center gap-2 tracking-wider leading-none">
+              <span class="bg-amber-500/10 text-amber-400 px-2 py-1 rounded-md text-[10px] font-black">FX 1</span>
+              Efek Reverb & Ruang
+            </h3>
+            <span class="text-[9px] text-slate-500 font-bold tracking-wider">DELAY ECHO & STAGE SPASIAL</span>
+          </div>
+
+          <div class="grid grid-cols-12 gap-4 flex-grow items-center">
+            <div class="col-span-6 bg-slate-950/40 p-4 rounded-xl border border-slate-850 flex items-center justify-between">
+              <div class="flex flex-col gap-1 justify-center">
+                <span class="text-[10px] font-black text-slate-300 flex items-center gap-1 uppercase tracking-wider">
+                  <svg class="w-3.5 h-3.5 text-amber-500 inline-block mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"></path><path d="M2 21l6-12 6 12"></path><path d="M12 21l5-8 5 8"></path></svg>
+                  Ruang Reverb
+                </span>
+                <span id="reverb-wet-val" class="text-xs text-amber-400 font-bold digital-font mt-0.5">20%</span>
+              </div>
+              <div class="flex gap-4">
+                <div class="flex flex-col items-center gap-0.5">
+                  <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Ukuran</span>
+                  <div class="synth-knob w-12 h-12 md:w-16 md:h-16" id="reverb-size" data-min="0.1" data-max="5.0" data-step="0.1" data-value="1.5" data-snap="[1.5, 2.5]" data-color="#d97706"></div>
+                  <span id="reverb-size-val" class="text-[9px] text-slate-400 font-bold mt-0.5">1.5s</span>
+                </div>
+                <div class="flex flex-col items-center gap-0.5">
+                  <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Kadar (Wet)</span>
+                  <div class="synth-knob w-12 h-12 md:w-16 md:h-16" id="reverb-wet" data-min="0" data-max="1" data-step="0.05" data-value="0.2" data-snap="[0, 0.5, 1.0]" data-color="#d97706"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-span-6 bg-slate-950/40 p-4 rounded-xl border border-slate-850 flex items-center justify-between">
+              <div class="flex flex-col gap-1 justify-center">
+                <span class="text-[10px] font-black text-slate-300 flex items-center gap-1 uppercase tracking-wider">
+                  <svg class="w-3.5 h-3.5 text-amber-500 inline-block mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>
+                  Echo Delay
+                </span>
+                <span id="delay-wet-val" class="text-xs text-amber-400 font-bold digital-font mt-0.5">30%</span>
+              </div>
+              <div class="flex gap-3">
+                <div class="flex flex-col items-center gap-0.5">
+                  <span class="text-[9px] text-slate-400 font-bold uppercase">Waktu</span>
+                  <div class="synth-knob w-11 h-11 md:w-14 md:h-14" id="delay-time" data-min="0.1" data-max="1.0" data-step="0.05" data-value="0.3" data-snap="[0.25, 0.5, 0.75]" data-color="#d97706"></div>
+                  <span id="delay-time-val" class="text-[9px] text-slate-400 font-bold mt-0.5">0.3s</span>
+                </div>
+                <div class="flex flex-col items-center gap-0.5">
+                  <span class="text-[9px] text-slate-400 font-bold uppercase">Feedback</span>
+                  <div class="synth-knob w-11 h-11 md:w-14 md:h-14" id="delay-feedback" data-min="0" data-max="0.9" data-step="0.05" data-value="0.4" data-snap="[0, 0.5]" data-color="#d97706"></div>
+                  <span id="delay-feedback-val" class="text-[9px] text-slate-400 font-bold mt-0.5">40%</span>
+                </div>
+                <div class="flex flex-col items-center gap-0.5">
+                  <span class="text-[9px] text-slate-400 font-bold uppercase">Kadar (Wet)</span>
+                  <div class="synth-knob w-11 h-11 md:w-14 md:h-14" id="delay-wet" data-min="0" data-max="1" data-step="0.05" data-value="0.3" data-snap="[0, 0.5, 1.0]" data-color="#d97706"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Layar Master -->
+    <div class="col-span-4 flex flex-col justify-between gap-3 h-full">
+      <div class="bg-gradient-to-b from-slate-950 to-slate-900 border border-slate-800/80 rounded-2xl p-4 shadow-inner flex flex-col gap-3 relative overflow-hidden flex-grow justify-center">
+        <div class="flex justify-between items-center text-[10px] font-black text-slate-400 tracking-wider">
+          <span>SPEKTRUM & OSILOSKOP</span>
+          <span class="text-orange-500 digital-font animate-pulse">● LIVE STEREO</span>
+        </div>
+        <div class="grid grid-cols-12 gap-3 flex-grow min-h-0">
+          <div class="col-span-9 bg-slate-950 border border-slate-900 rounded-xl overflow-hidden relative">
+            <canvas id="scopeCanvas" class="w-full h-full block"></canvas>
+          </div>
+          <div class="col-span-3 bg-slate-950 border border-slate-900 rounded-xl p-3 flex flex-col justify-between items-center relative">
+            <div class="flex gap-2 h-full w-full justify-center">
+              <div class="w-2.5 h-full bg-slate-900 rounded-md border border-slate-850 relative overflow-hidden flex flex-col justify-end">
+                <div id="db-level-bar-l" class="w-full h-[0%] bg-gradient-to-t from-emerald-500 via-amber-400 to-red-500 rounded-sm transition-all duration-75"></div>
+                <div id="db-peak-l" class="absolute left-0 right-0 h-1 bg-red-400" style="bottom: 0%"></div>
+              </div>
+              <div class="w-2.5 h-full bg-slate-900 rounded-md border border-slate-850 relative overflow-hidden flex flex-col justify-end">
+                <div id="db-level-bar-r" class="w-full h-[0%] bg-gradient-to-t from-emerald-500 via-amber-400 to-red-500 rounded-sm transition-all duration-75"></div>
+                <div id="db-peak-r" class="absolute left-0 right-0 h-1 bg-red-400" style="bottom: 0%"></div>
+              </div>
+            </div>
+            <div class="flex justify-between w-full text-[9px] text-orange-400/50 uppercase font-mono tracking-wider mt-1.5">
+              <span>L</span><span>dB</span><span>R</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-gradient-to-br from-slate-900/60 to-slate-950/40 border border-slate-800/80 rounded-2xl p-4 lg:p-5 backdrop-blur flex flex-col justify-center shadow-2xl gap-3">
+        <div class="bg-slate-950/60 px-4 py-2.5 rounded-xl border border-slate-850 flex justify-between items-center w-full">
+          <div class="flex flex-col gap-0.5">
+            <span class="text-[9px] font-black text-slate-300 uppercase tracking-wider">Volume Master</span>
+            <span id="master-vol-val" class="text-orange-400 font-bold digital-font text-sm">100%</span>
+          </div>
+          <div class="synth-knob w-11 h-11 md:w-14 md:h-14" id="master-vol" data-min="0" data-max="3" data-step="0.05" data-value="1.0" data-snap="[0, 1.0, 2.0, 3.0]" data-color="#f97316"></div>
+        </div>
+        <div class="bg-slate-950/60 px-4 py-2.5 rounded-xl border border-slate-850 flex justify-between items-center w-full">
+          <div class="flex flex-col gap-0.5">
+            <span class="text-[9px] font-black text-slate-300 uppercase tracking-wider">Waktu Glide</span>
+            <span id="portamento-val" class="text-orange-400 font-bold digital-font text-sm">0.00s</span>
+            <div class="flex items-center gap-2 mt-1">
+              <span class="text-[8px] font-bold text-slate-400">MONO</span>
+              <div class="relative inline-block w-8 mr-2 align-middle select-none transition duration-200 ease-in">
+                <input type="checkbox" id="mono-toggle" onchange="toggleMonoMode()" class="toggle-checkbox absolute block w-4 h-4 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 transition-transform duration-200 ease-in-out"/>
+                <label for="mono-toggle" class="toggle-label block overflow-hidden h-4 rounded-full bg-slate-700 cursor-pointer"></label>
+              </div>
+            </div>
+          </div>
+          <div class="synth-knob w-11 h-11 md:w-14 md:h-14" id="portamento" data-min="0" data-max="1" data-step="0.01" data-value="0" data-snap="[0]" data-color="#f97316"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="w-full max-w-full px-4 shrink-0 flex flex-col gap-2">
+    <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 shadow-2xl relative flex flex-col gap-1 overflow-hidden">
+      <!-- MENGGUNAKAN POINTER-EVENTS-NONE AGAR AIR TERJUN TIDAK BISA DIKLIK / MENCURI FOKUS -->
+      <canvas id="waterfallCanvas" class="w-full h-24 block bg-slate-950 border-b border-slate-900 rounded-t-xl pointer-events-none"></canvas>
+      <div id="piano" class="flex relative h-20 select-none touch-none"></div>
+    </div>
+  </footer>
+
+  <script>
+    let audioCtx = null
+
+    // State instrumen & memori tuts
+    let baseTuning = 440
+    let octaveOffset = 5
+    let transposeOffset = 0
+    let portamentoTime = 0
+    let isMonoMode = false
+    const maxOctave = 8
+    const minOctave = 1
+
+    const synthConfig = {
+      osc1: { shape: 'sine', coarse: 0, fine: 0, vol: 0.8, unisonVoices: 1, unisonDetune: 0.15 },
+      osc2: { shape: 'sawtooth', coarse: -12, fine: 0, vol: 0.6, unisonVoices: 1, unisonDetune: 0.0 },
+      osc3: { shape: 'noise', coarse: 0, fine: 15, vol: 0.05, unisonVoices: 1, unisonDetune: 0.0 }
+    }
+
+    const filterConfig = { type: 'lowpass', cutoff: 20000, q: 1.0 }
+
+    const factoryPresets = {
+      init: {
+        baseTuning: 440,
+        synthConfig: {
+          osc1: { shape: 'sine', coarse: 0, fine: 0, vol: 0.8, unisonVoices: 1, unisonDetune: 0.15 },
+          osc2: { shape: 'sawtooth', coarse: -12, fine: 0, vol: 0.6, unisonVoices: 1, unisonDetune: 0.0 },
+          osc3: { shape: 'noise', coarse: 0, fine: 15, vol: 0.05, unisonVoices: 1, unisonDetune: 0.0 }
+        },
+        filterConfig: { type: 'lowpass', cutoff: 20000, q: 1.0 },
+        lfos: [ { shape: 'sine', rate: 3.0 }, { shape: 'triangle', rate: 1.0 }, { shape: 'sawtooth', rate: 5.0 } ],
+        envs: [
+          { attack: 0.01, decay: 0.4, sustain: 0.0, release: 0.2 },
+          { attack: 0.5, decay: 0.5, sustain: 0.5, release: 1.0 },
+          { attack: 0.1, decay: 0.2, sustain: 0.0, release: 0.2 }
+        ],
+        modMatrix: {
+          lfo0: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          lfo1: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          lfo2: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env0: { g_vol: 1, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env1: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env2: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 }
+        },
+        masterVol: 1.0, reverbSize: 1.5, reverbWet: 0.2, delayTime: 0.3, delayFeedback: 0.4, delayWet: 0.3, portamento: 0
+      },
+      pluck: {
+        baseTuning: 440,
+        synthConfig: {
+          osc1: { shape: 'square', coarse: 0, fine: 0, vol: 0.8, unisonVoices: 1, unisonDetune: 0.0 },
+          osc2: { shape: 'sawtooth', coarse: -12, fine: 0, vol: 0.6, unisonVoices: 1, unisonDetune: 0.0 },
+          osc3: { shape: 'noise', coarse: 0, fine: 0, vol: 0.0, unisonVoices: 1, unisonDetune: 0.0 }
+        },
+        filterConfig: { type: 'lowpass', cutoff: 800, q: 2.0 },
+        lfos: [ { shape: 'sine', rate: 3.0 }, { shape: 'triangle', rate: 1.0 }, { shape: 'sawtooth', rate: 5.0 } ],
+        envs: [
+          { attack: 0.01, decay: 0.3, sustain: 0.0, release: 0.2 },
+          { attack: 0.01, decay: 0.4, sustain: 0.0, release: 0.2 },
+          { attack: 0.1, decay: 0.2, sustain: 0.0, release: 0.2 }
+        ],
+        modMatrix: {
+          lfo0: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          lfo1: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          lfo2: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env0: { g_vol: 1, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env1: { g_vol: 0, g_pit: 0, filt: 0.6, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env2: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 }
+        },
+        masterVol: 1.0, reverbSize: 1.5, reverbWet: 0.3, delayTime: 0.3, delayFeedback: 0.2, delayWet: 0.2, portamento: 0
+      },
+      pad: {
+        baseTuning: 440,
+        synthConfig: {
+          osc1: { shape: 'sawtooth', coarse: 0, fine: 0, vol: 0.7, unisonVoices: 5, unisonDetune: 0.2 },
+          osc2: { shape: 'sawtooth', coarse: -12, fine: 5, vol: 0.6, unisonVoices: 3, unisonDetune: 0.15 },
+          osc3: { shape: 'triangle', coarse: 12, fine: -5, vol: 0.3, unisonVoices: 1, unisonDetune: 0.0 }
+        },
+        filterConfig: { type: 'lowpass', cutoff: 1500, q: 1.5 },
+        lfos: [ { shape: 'sine', rate: 0.5 }, { shape: 'triangle', rate: 1.0 }, { shape: 'sawtooth', rate: 5.0 } ],
+        envs: [
+          { attack: 1.5, decay: 2.0, sustain: 0.8, release: 2.5 },
+          { attack: 2.0, decay: 2.0, sustain: 0.5, release: 2.5 },
+          { attack: 0.1, decay: 0.2, sustain: 0.0, release: 0.2 }
+        ],
+        modMatrix: {
+          lfo0: { g_vol: 0, g_pit: 0, filt: 0.15, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          lfo1: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          lfo2: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env0: { g_vol: 1, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env1: { g_vol: 0, g_pit: 0, filt: 0.3, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env2: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 }
+        },
+        masterVol: 0.8, reverbSize: 4.0, reverbWet: 0.6, delayTime: 0.5, delayFeedback: 0.4, delayWet: 0.3, portamento: 0
+      },
+      lead: {
+        isMono: true,
+        baseTuning: 440,
+        synthConfig: {
+          osc1: { shape: 'sawtooth', coarse: 0, fine: 0, vol: 0.8, unisonVoices: 3, unisonDetune: 0.1 },
+          osc2: { shape: 'square', coarse: 0, fine: 7, vol: 0.6, unisonVoices: 1, unisonDetune: 0.0 },
+          osc3: { shape: 'noise', coarse: 0, fine: 0, vol: 0.1, unisonVoices: 1, unisonDetune: 0.0 }
+        },
+        filterConfig: { type: 'lowpass', cutoff: 5000, q: 1.5 },
+        lfos: [ { shape: 'sine', rate: 5.0 }, { shape: 'triangle', rate: 1.0 }, { shape: 'sawtooth', rate: 5.0 } ],
+        envs: [
+          { attack: 0.05, decay: 0.5, sustain: 0.6, release: 0.3 },
+          { attack: 0.5, decay: 0.5, sustain: 0.5, release: 1.0 },
+          { attack: 0.1, decay: 0.2, sustain: 0.0, release: 0.2 }
+        ],
+        modMatrix: {
+          lfo0: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          lfo1: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          lfo2: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env0: { g_vol: 1, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env1: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env2: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 }
+        },
+        masterVol: 0.9, reverbSize: 2.0, reverbWet: 0.25, delayTime: 0.33, delayFeedback: 0.4, delayWet: 0.4, portamento: 0.08
+      },
+      bass: {
+        isMono: true,
+        baseTuning: 440,
+        synthConfig: {
+          osc1: { shape: 'sawtooth', coarse: 0, fine: 0, vol: 0.7, unisonVoices: 1, unisonDetune: 0 },
+          osc2: { shape: 'sine', coarse: -12, fine: 0, vol: 0.9, unisonVoices: 1, unisonDetune: 0 },
+          osc3: { shape: 'triangle', coarse: 0, fine: 0, vol: 0.2, unisonVoices: 1, unisonDetune: 0 }
+        },
+        filterConfig: { type: 'lowpass', cutoff: 150, q: 1.2 },
+        lfos: [ { shape: 'sine', rate: 3.0 }, { shape: 'triangle', rate: 1.0 }, { shape: 'sawtooth', rate: 5.0 } ],
+        envs: [
+          { attack: 0.01, decay: 0.4, sustain: 0.2, release: 0.15 },
+          { attack: 0.01, decay: 0.25, sustain: 0.0, release: 0.1 },
+          { attack: 0.1, decay: 0.2, sustain: 0.0, release: 0.2 }
+        ],
+        modMatrix: {
+          lfo0: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          lfo1: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          lfo2: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env0: { g_vol: 1, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env1: { g_vol: 0, g_pit: 0, filt: 0.5, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env2: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 }
+        },
+        masterVol: 1.0, reverbSize: 1.0, reverbWet: 0.05, delayTime: 0.3, delayFeedback: 0.1, delayWet: 0.0, portamento: 0.05
+      },
+      keys: {
+        baseTuning: 440,
+        synthConfig: {
+          osc1: { shape: 'square', coarse: 0, fine: 0, vol: 0.7, unisonVoices: 1, unisonDetune: 0 },
+          osc2: { shape: 'triangle', coarse: 0, fine: 5, vol: 0.5, unisonVoices: 1, unisonDetune: 0 },
+          osc3: { shape: 'sine', coarse: 12, fine: 0, vol: 0.3, unisonVoices: 1, unisonDetune: 0 }
+        },
+        filterConfig: { type: 'lowpass', cutoff: 1200, q: 2.0 },
+        lfos: [ { shape: 'sine', rate: 4.0 }, { shape: 'triangle', rate: 1.0 }, { shape: 'sawtooth', rate: 5.0 } ],
+        envs: [
+          { attack: 0.02, decay: 1.5, sustain: 0.0, release: 0.4 },
+          { attack: 0.05, decay: 1.0, sustain: 0.0, release: 0.3 },
+          { attack: 0.1, decay: 0.2, sustain: 0.0, release: 0.2 }
+        ],
+        modMatrix: {
+          lfo0: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0.1, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          lfo1: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          lfo2: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env0: { g_vol: 1, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env1: { g_vol: 0, g_pit: 0, filt: 0.4, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env2: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 }
+        },
+        masterVol: 0.9, reverbSize: 1.8, reverbWet: 0.3, delayTime: 0.35, delayFeedback: 0.3, delayWet: 0.15, portamento: 0
+      },
+      brass: {
+        baseTuning: 440,
+        synthConfig: {
+          osc1: { shape: 'sawtooth', coarse: 0, fine: 0, vol: 0.8, unisonVoices: 3, unisonDetune: 0.08 },
+          osc2: { shape: 'sawtooth', coarse: 0, fine: 6, vol: 0.7, unisonVoices: 3, unisonDetune: 0.12 },
+          osc3: { shape: 'sawtooth', coarse: -12, fine: 0, vol: 0.4, unisonVoices: 1, unisonDetune: 0 }
+        },
+        filterConfig: { type: 'lowpass', cutoff: 500, q: 1.2 },
+        lfos: [ { shape: 'sine', rate: 4.0 }, { shape: 'triangle', rate: 1.0 }, { shape: 'sawtooth', rate: 5.0 } ],
+        envs: [
+          { attack: 0.15, decay: 0.6, sustain: 0.7, release: 0.5 },
+          { attack: 0.18, decay: 0.5, sustain: 0.3, release: 0.4 },
+          { attack: 0.1, decay: 0.2, sustain: 0.0, release: 0.2 }
+        ],
+        modMatrix: {
+          lfo0: { g_vol: 0, g_pit: 0, filt: 0.05, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          lfo1: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          lfo2: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env0: { g_vol: 1, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env1: { g_vol: 0, g_pit: 0, filt: 0.6, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env2: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 }
+        },
+        masterVol: 0.85, reverbSize: 2.5, reverbWet: 0.35, delayTime: 0.4, delayFeedback: 0.2, delayWet: 0.1, portamento: 0
+      },
+      strings: {
+        baseTuning: 440,
+        synthConfig: {
+          osc1: { shape: 'sawtooth', coarse: 0, fine: 0, vol: 0.6, unisonVoices: 7, unisonDetune: 0.35 },
+          osc2: { shape: 'sawtooth', coarse: -12, fine: 4, vol: 0.5, unisonVoices: 5, unisonDetune: 0.25 },
+          osc3: { shape: 'noise', coarse: 0, fine: 0, vol: 0.02, unisonVoices: 1, unisonDetune: 0 }
+        },
+        filterConfig: { type: 'lowpass', cutoff: 8000, q: 0.5 },
+        lfos: [ { shape: 'sine', rate: 2.0 }, { shape: 'triangle', rate: 1.0 }, { shape: 'sawtooth', rate: 5.0 } ],
+        envs: [
+          { attack: 1.2, decay: 1.0, sustain: 1.0, release: 2.0 },
+          { attack: 2.5, decay: 1.0, sustain: 0.8, release: 2.0 },
+          { attack: 0.1, decay: 0.2, sustain: 0.0, release: 0.2 }
+        ],
+        modMatrix: {
+          lfo0: { g_vol: 0, g_pit: 0, filt: 0.05, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          lfo1: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          lfo2: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env0: { g_vol: 1, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env1: { g_vol: 0, g_pit: 0, filt: 0.2, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+          env2: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 }
+        },
+        masterVol: 0.7, reverbSize: 4.5, reverbWet: 0.6, delayTime: 0.5, delayFeedback: 0.2, delayWet: 0.1, portamento: 0
+      }
+    }
+
+    function loadFactoryPreset(name) {
+      if (!name || !factoryPresets[name]) return
+      releaseAllNotes()
+      const presetCopy = JSON.parse(JSON.stringify(factoryPresets[name]))
+      
+      Object.keys(modMatrix).forEach(src => {
+        matrixTargets.forEach(tgt => modMatrix[src][tgt] = 0)
+      })
+
+      applyPresetData(presetCopy)
+      
+      if (presetCopy.isMono === true || (name === 'lead' && presetCopy.portamento > 0)) {
+        document.getElementById('mono-toggle').checked = true
+        isMonoMode = true
+      } else {
+        document.getElementById('mono-toggle').checked = false
+        isMonoMode = false
+      }
+      
+      document.getElementById('factory-presets').blur()
+    }
+
+    const lfos = [
+      { shape: 'sine', rate: 3.0 },
+      { shape: 'triangle', rate: 1.0 },
+      { shape: 'sawtooth', rate: 5.0 }
+    ]
+    let activeLfo = 0
+
+    const envs = [
+      { attack: 0.01, decay: 0.4, sustain: 0.0, release: 0.2 },
+      { attack: 0.5, decay: 0.5, sustain: 0.5, release: 1.0 },
+      { attack: 0.1, decay: 0.2, sustain: 0.0, release: 0.2 }
+    ]
+    let activeEnv = 0
+
+    // STATE MATRIKS MODULASI GLOBAL
+    // Memetakan Source -> Destination Target dengan skala nilai (-1 hingga 1)
+    const modMatrix = {
+      lfo0: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+      lfo1: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+      lfo2: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+      env0: { g_vol: 1, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 }, // ENV 1 mengontrol Volume secara bawaan
+      env1: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 },
+      env2: { g_vol: 0, g_pit: 0, filt: 0, o1_v: 0, o2_v: 0, o3_v: 0, o1_p: 0, o2_p: 0, o3_p: 0, l1_r: 0, l2_r: 0, l3_r: 0, l1_d: 0, l2_d: 0, l3_d: 0 }
+    }
+    const matrixTargets = ['g_vol', 'g_pit', 'filt', 'o1_v', 'o2_v', 'o3_v', 'o1_p', 'o2_p', 'o3_p', 'l1_r', 'l2_r', 'l3_r', 'l1_d', 'l2_d', 'l3_d']
+
+    let masterGain = null
+    let delayNode = null
+    let delayFeedback = null
+    let delayWet = null
+    let reverbNode = null
+    let reverbWet = null
+    let analyserNode = null
+    let analyserL = null
+    let analyserR = null
+    const globalLfoOscs = [null, null, null]
+    
+    let currentL = 0, currentR = 0, peakL = 0, peakR = 0, peakHoldL = 0, peakHoldR = 0
+
+    // STATE PENGELOLA NADA
+    const activeNotes = new Map() 
+    const heldMidiNotes = [] 
+    const activeMouseNotes = new Map()
+    const activeKeyboardKeys = new Map()
+    const waterfallBlocks = []
+    const keyPositions = {}
+
+    const keyMap = {
+      'z': { note: 0, name: 'C' }, 's': { note: 1, name: 'C#' }, 'x': { note: 2, name: 'D' }, 'd': { note: 3, name: 'D#' },
+      'c': { note: 4, name: 'E' }, 'v': { note: 5, name: 'F' }, 'g': { note: 6, name: 'F#' }, 'b': { note: 7, name: 'G' },
+      'h': { note: 8, name: 'G#' }, 'n': { note: 9, name: 'A' }, 'j': { note: 10, name: 'A#' }, 'm': { note: 11, name: 'B' },
+      ',': { note: 12, name: 'C+1' }, 'l': { note: 13, name: 'C#+1' }, '.': { note: 14, name: 'D+1' }, ';': { note: 15, name: 'D#+1' },
+      '/': { note: 16, name: 'E+1' },
+      'q': { note: 12, name: 'C+1' }, '2': { note: 13, name: 'C#+1' }, 'w': { note: 14, name: 'D+1' }, '3': { note: 15, name: 'D#+1' },
+      'e': { note: 16, name: 'E+1' }, 'r': { note: 17, name: 'F+1' }, '5': { note: 18, name: 'F#+1' }, 't': { note: 19, name: 'G+1' },
+      '6': { note: 20, name: 'G#+1' }, 'y': { note: 21, name: 'A+1' }, '7': { note: 22, name: 'A#+1' }, 'u': { note: 23, name: 'B+1' },
+      'i': { note: 24, name: 'C+2' }, '9': { note: 25, name: 'C#+2' }, 'o': { note: 26, name: 'D+2' }, '0': { note: 27, name: 'D#+2' },
+      'p': { note: 28, name: 'E+2' }, '[': { note: 29, name: 'F+2' }, '=': { note: 30, name: 'F#+2' }, ']': { note: 31, name: 'G+2' }
+    }
+
+    const pianoKeys = []
+    for (let m = 21; m <= 108; m++) {
+      const rem = m % 12, isBlack = (rem === 1 || rem === 3 || rem === 6 || rem === 8 || rem === 10); let label = ''
+      if (m === 21) label = 'A0'; else if (m === 24) label = 'C1'; else if (m === 36) label = 'C2'; else if (m === 48) label = 'C3'
+      else if (m === 60) label = 'C4'; else if (m === 72) label = 'C5'; else if (m === 84) label = 'C6'; else if (m === 96) label = 'C7'; else if (m === 108) label = 'C8'
+      pianoKeys.push({ midi: m, isBlack, name: label })
+    }
+
+    // Bangun HTML Matriks secara dinamis
+    function buildMatrixGrid() {
+      const container = document.getElementById('matrix-grid')
+      const sources = [
+        { id: 'lfo0', name: 'LFO 1', color: '#fb923c' },
+        { id: 'lfo1', name: 'LFO 2', color: '#fb923c' },
+        { id: 'lfo2', name: 'LFO 3', color: '#fb923c' },
+        { id: 'env0', name: 'ENV 1', color: '#a78bfa' },
+        { id: 'env1', name: 'ENV 2', color: '#a78bfa' },
+        { id: 'env2', name: 'ENV 3', color: '#a78bfa' }
+      ]
+      
+      sources.forEach(src => {
+        const rowHeader = document.createElement('div')
+        rowHeader.className = `text-[10px] font-black flex items-center justify-end pr-2`
+        rowHeader.style.color = src.color
+        rowHeader.innerText = src.name
+        container.appendChild(rowHeader)
+        
+        matrixTargets.forEach(tgt => {
+          const cell = document.createElement('div')
+          cell.className = "flex justify-center"
+          const val = modMatrix[src.id][tgt]
+          cell.innerHTML = `<div class="synth-knob w-8 h-8 lg:w-10 lg:h-10" id="mat-${src.id}-${tgt}" data-min="-1" data-max="1" data-step="0.01" data-value="${val}" data-snap="[-1, 0, 1]" data-color="${src.color}"></div>`
+          container.appendChild(cell)
+        })
+      })
+    }
+    buildMatrixGrid()
+
+    function getNoteNameFromMidi(midi) {
+      const names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+      const noteIdx = midi % 12, oct = Math.floor(midi / 12) - 1
+      return `${names[noteIdx]}${oct}`
+    }
+
+    function toggleMonoMode() {
+      isMonoMode = document.getElementById('mono-toggle').checked
+      releaseAllNotes()
+    }
+    
+    function updateBaseTuning() {
+      const input = document.getElementById('base-tuning-input')
+      let val = parseFloat(input.value)
+      if(isNaN(val) || val < 10) val = 440
+      baseTuning = val
+    }
+
+    function initGlobalLFOs() {
+      if (!audioCtx) return
+      for (let i = 0; i < 3; i++) {
+        if (globalLfoOscs[i]) globalLfoOscs[i].stop()
+        const osc = audioCtx.createOscillator()
+        osc.type = lfos[i].shape
+        osc.frequency.setValueAtTime(lfos[i].rate, audioCtx.currentTime)
+        osc.start()
+        globalLfoOscs[i] = osc
+      }
+    }
+
+    function initAudio() {
+      if (audioCtx) return
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+
+      analyserNode = audioCtx.createAnalyser()
+      analyserNode.fftSize = 2048
+      analyserL = audioCtx.createAnalyser()
+      analyserR = audioCtx.createAnalyser()
+      analyserL.fftSize = 256
+      analyserR.fftSize = 256
+
+      masterGain = audioCtx.createGain()
+      masterGain.gain.setValueAtTime(parseFloat(document.getElementById('master-vol').dataset.value), audioCtx.currentTime)
+
+      const limiter = audioCtx.createDynamicsCompressor()
+      limiter.threshold.setValueAtTime(-1.0, audioCtx.currentTime)
+      limiter.knee.setValueAtTime(0.0, audioCtx.currentTime)
+      limiter.ratio.setValueAtTime(20.0, audioCtx.currentTime)
+      limiter.attack.setValueAtTime(0.003, audioCtx.currentTime)
+      limiter.release.setValueAtTime(0.08, audioCtx.currentTime)
+
+      delayNode = audioCtx.createDelay(5.0)
+      delayFeedback = audioCtx.createGain()
+      delayWet = audioCtx.createGain()
+
+      delayNode.delayTime.setValueAtTime(parseFloat(document.getElementById('delay-time').dataset.value), audioCtx.currentTime)
+      delayFeedback.gain.setValueAtTime(parseFloat(document.getElementById('delay-feedback').dataset.value), audioCtx.currentTime)
+      delayWet.gain.setValueAtTime(parseFloat(document.getElementById('delay-wet').dataset.value), audioCtx.currentTime)
+
+      delayNode.connect(delayFeedback)
+      delayFeedback.connect(delayNode)
+
+      reverbNode = audioCtx.createConvolver()
+      reverbWet = audioCtx.createGain()
+      reverbWet.gain.setValueAtTime(parseFloat(document.getElementById('reverb-wet').dataset.value), audioCtx.currentTime)
+      updateReverbImpulseResponse()
+
+      masterGain.connect(limiter)
+      masterGain.connect(delayNode)
+      delayNode.connect(delayWet)
+      delayWet.connect(limiter)
+
+      masterGain.connect(reverbNode)
+      reverbNode.connect(reverbWet)
+      reverbWet.connect(limiter)
+
+      limiter.connect(analyserNode)
+      analyserNode.connect(audioCtx.destination)
+
+      const splitter = audioCtx.createChannelSplitter(2)
+      limiter.connect(splitter)
+      splitter.connect(analyserL, 0)
+      splitter.connect(analyserR, 1)
+
+      initGlobalLFOs()
+
+      const overlay = document.getElementById('audio-init-overlay')
+      overlay.classList.add('opacity-0')
+      setTimeout(() => overlay.remove(), 300)
+      drawVisualizer()
+    }
+
+    function createNoiseBuffer() {
+      const bufferSize = audioCtx.sampleRate * 2, buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate), data = buffer.getChannelData(0)
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1
+      return buffer
+    }
+
+    function updateReverbImpulseResponse() {
+      if (!audioCtx) return
+      const duration = parseFloat(document.getElementById('reverb-size').dataset.value), sampleRate = audioCtx.sampleRate
+      const length = sampleRate * duration, impulse = audioCtx.createBuffer(2, length, sampleRate)
+      const left = impulse.getChannelData(0), right = impulse.getChannelData(1)
+      for (let i = 0; i < length; i++) {
+        const percent = i / length, val = (Math.random() * 2 - 1) * Math.pow(1 - percent, 2.5)
+        left[i] = val; right[i] = val
+      }
+      reverbNode.buffer = impulse
+    }
+
+    function noteToFreq(note) { return baseTuning * Math.pow(2, (note - 69) / 12) }
+
+    function gatherPresetData() {
+      return {
+        baseTuning, synthConfig, filterConfig, lfos, envs, modMatrix,
+        masterVol: parseFloat(document.getElementById('master-vol').dataset.value),
+        reverbSize: parseFloat(document.getElementById('reverb-size').dataset.value),
+        reverbWet: parseFloat(document.getElementById('reverb-wet').dataset.value),
+        delayTime: parseFloat(document.getElementById('delay-time').dataset.value),
+        delayFeedback: parseFloat(document.getElementById('delay-feedback').dataset.value),
+        delayWet: parseFloat(document.getElementById('delay-wet').dataset.value),
+        portamento: parseFloat(document.getElementById('portamento').dataset.value)
+      }
+    }
+
+    function applyPresetData(preset) {
+      if(preset.baseTuning !== undefined) {
+        baseTuning = preset.baseTuning
+        document.getElementById('base-tuning-input').value = baseTuning
+      }
+      if(preset.synthConfig) {
+        for (let i = 1; i <= 3; i++) {
+          if (preset.synthConfig[`osc${i}`]) Object.assign(synthConfig[`osc${i}`], preset.synthConfig[`osc${i}`])
+        }
+      }
+      if(preset.filterConfig) Object.assign(filterConfig, preset.filterConfig)
+      if(preset.lfos) preset.lfos.forEach((l, i) => { if(lfos[i]) Object.assign(lfos[i], l) })
+      if(preset.envs) preset.envs.forEach((en, i) => { if(envs[i]) Object.assign(envs[i], en) })
+      if(preset.modMatrix) {
+         Object.keys(preset.modMatrix).forEach(src => {
+            if(modMatrix[src]) Object.assign(modMatrix[src], preset.modMatrix[src])
+         })
+         Object.keys(modMatrix).forEach(src => {
+            matrixTargets.forEach(tgt => setKnobValue(`mat-${src}-${tgt}`, modMatrix[src][tgt]))
+         })
+      }
+
+      for(let i=1; i<=3; i++) {
+        setKnobValue(`osc${i}-coarse`, synthConfig[`osc${i}`].coarse)
+        setKnobValue(`osc${i}-fine`, synthConfig[`osc${i}`].fine)
+        setKnobValue(`osc${i}-vol`, synthConfig[`osc${i}`].vol)
+        setKnobValue(`osc${i}-voices`, synthConfig[`osc${i}`].unisonVoices)
+        setKnobValue(`osc${i}-detune`, synthConfig[`osc${i}`].unisonDetune)
+        setOscShape(i, synthConfig[`osc${i}`].shape)
+      }
+      
+      setKnobValue('filter-cutoff', filterConfig.cutoff)
+      setKnobValue('filter-q', filterConfig.q)
+      setFilterType(filterConfig.type)
+      
+      if(preset.masterVol !== undefined) setKnobValue('master-vol', preset.masterVol)
+      if(preset.reverbSize !== undefined) setKnobValue('reverb-size', preset.reverbSize)
+      if(preset.reverbWet !== undefined) setKnobValue('reverb-wet', preset.reverbWet)
+      if(preset.delayTime !== undefined) setKnobValue('delay-time', preset.delayTime)
+      if(preset.delayFeedback !== undefined) setKnobValue('delay-feedback', preset.delayFeedback)
+      if(preset.delayWet !== undefined) setKnobValue('delay-wet', preset.delayWet)
+      if(preset.portamento !== undefined) setKnobValue('portamento', preset.portamento)
+      
+      selectLfo(activeLfo); selectEnv(activeEnv)
+      updateOscParams(1); updateOscParams(2); updateOscParams(3)
+      updateFilterParams(); updateMasterParams(); updateReverbParams(); updateDelayParams()
+    }
+
+    function savePresetFile() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(gatherPresetData()))
+      const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", "3xosc_preset.json"); a.click()
+    }
+
+    document.getElementById('preset-upload').addEventListener('change', (e) => {
+      const file = e.target.files[0]
+      if (!file) return
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        try { applyPresetData(JSON.parse(ev.target.result)) } catch (err) { alert('Berkas Preset Tidak Valid!') }
+      }
+      reader.readAsText(file); e.target.value = ''
+    })
+
+    function savePresetLocal() {
+      localStorage.setItem('3xosc_web_preset', JSON.stringify(gatherPresetData()))
+      const btn = document.querySelector('button[onclick="savePresetLocal()"]')
+      const oldHtml = btn.innerHTML; btn.innerHTML = '<svg class="w-2.5 h-2.5 inline-block text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> TERSIMPAN'
+      setTimeout(() => btn.innerHTML = oldHtml, 1500)
+    }
+
+    function loadPresetLocal() {
+      const data = localStorage.getItem('3xosc_web_preset')
+      if (data) {
+        try { applyPresetData(JSON.parse(data)) } catch (e) { alert('Gagal memuat preset memori!') }
+      } else { alert('Belum ada preset tersimpan di Cache peramban.') }
+    }
+
+    function setKnobValue(id, val) {
+      const knob = document.getElementById(id)
+      if(knob) { knob.dataset.value = val; renderKnobSVG(knob) }
+    }
+
+    function initVoice(voiceId, midiNote) {
+      const now = audioCtx.currentTime, baseFreq = noteToFreq(midiNote)
+      const noteGroup = {
+        currentMidi: midiNote, nodes: [], filterNode: null, mainGainNode: null,
+        startTime: Date.now(), released: false, releaseTime: null, envConnections: [], oscNodes: [], oscGains: [],
+        lfoGains: [], matrixGains: []
+      }
+
+      const noteFilter = audioCtx.createBiquadFilter()
+      noteFilter.type = filterConfig.type; noteFilter.Q.setValueAtTime(filterConfig.q, now); noteFilter.frequency.setValueAtTime(filterConfig.cutoff, now)
+      noteGroup.filterNode = noteFilter
+
+      const noteGain = audioCtx.createGain(); noteGain.gain.setValueAtTime(0, now) // Amplitude default 0, menunggu Envelope Matrix
+      noteGroup.mainGainNode = noteGain
+      noteFilter.connect(noteGain); noteGain.connect(masterGain)
+
+      for (let i = 1; i <= 3; i++) {
+        noteGroup.oscNodes[i] = []
+        const conf = synthConfig[`osc${i}`]
+        const oscGain = audioCtx.createGain()
+        oscGain.gain.setValueAtTime(conf.vol / Math.sqrt(conf.unisonVoices), now)
+        noteGroup.oscGains[i] = oscGain
+
+        const freq = baseFreq * Math.pow(2, (conf.coarse + conf.fine / 100) / 12)
+
+        for (let v = 0; v < conf.unisonVoices; v++) {
+          const oscPan = audioCtx.createStereoPanner()
+          let detuneAmount = 0
+          if (conf.unisonVoices > 1) {
+            const spreadFraction = v / (conf.unisonVoices - 1)
+            detuneAmount = (spreadFraction * 2 - 1) * (conf.unisonDetune * 100)
+            oscPan.pan.value = (spreadFraction * 2 - 1) * conf.unisonDetune
+          }
+          oscPan.connect(oscGain)
+
+          if (conf.shape === 'noise') {
+            const noise = audioCtx.createBufferSource(); noise.buffer = createNoiseBuffer(); noise.loop = true
+            const bq = audioCtx.createBiquadFilter(); bq.type = 'bandpass'; bq.frequency.value = freq; bq.detune.value = detuneAmount
+            noise.connect(bq); bq.connect(oscPan); noise.start(); noteGroup.nodes.push(noise)
+            noteGroup.oscNodes[i].push({ type: 'noise', bq: bq })
+          } else {
+            const osc = audioCtx.createOscillator()
+            osc.type = conf.shape; osc.frequency.setValueAtTime(freq, now); osc.detune.value = detuneAmount
+            osc.connect(oscPan); osc.start(); noteGroup.nodes.push(osc)
+            noteGroup.oscNodes[i].push(osc)
+          }
+        }
+        oscGain.connect(noteFilter)
+      }
+
+      // -- MATRIX ROUTING LOGIC -- //
+      
+      // Setup Constant Control Voltage untuk Envelopes
+      const constantSrc = audioCtx.createConstantSource()
+      constantSrc.offset.value = 1
+      constantSrc.start()
+      noteGroup.nodes.push(constantSrc)
+
+      const envCvs = []
+      envs.forEach((env, i) => {
+        const envGain = audioCtx.createGain()
+        envGain.gain.setValueAtTime(0, now)
+        envGain.gain.linearRampToValueAtTime(1, now + env.attack)
+        envGain.gain.exponentialRampToValueAtTime(Math.max(env.sustain, 0.001), now + env.attack + env.decay)
+        constantSrc.connect(envGain)
+        envCvs.push(envGain)
+        noteGroup.envConnections.push({ param: envGain.gain, envIndex: i })
+      })
+
+      // Setup LFO per-voice depth controller (sehingga Env bisa kontrol kedalaman LFO per nada)
+      const lfoOuts = []
+      for(let i=0; i<3; i++) {
+        const lfoGain = audioCtx.createGain()
+        lfoGain.gain.value = 1.0 // Base gain dari sinyal LFO masuk ke matriks
+        globalLfoOscs[i].connect(lfoGain)
+        noteGroup.lfoGains.push({ globalIndex: i, localNode: lfoGain })
+        lfoOuts.push(lfoGain)
+      }
+
+      // Parameter Target yang tersedia dan multiplier (scalar) nya
+      const targets = {
+        'g_vol': { param: noteGain.gain, scalar: 1 },
+        'g_pit': { params: [], scalar: 2400 }, // Disuplai ke semua osc
+        'filt': { param: noteFilter.frequency, scalar: 8000 },
+        'o1_v': { param: noteGroup.oscGains[1].gain, scalar: synthConfig.osc1.vol },
+        'o2_v': { param: noteGroup.oscGains[2].gain, scalar: synthConfig.osc2.vol },
+        'o3_v': { param: noteGroup.oscGains[3].gain, scalar: synthConfig.osc3.vol },
+        'o1_p': { params: [], scalar: 2400 },
+        'o2_p': { params: [], scalar: 2400 },
+        'o3_p': { params: [], scalar: 2400 },
+        'l1_r': { param: globalLfoOscs[0].frequency, scalar: 20 },
+        'l2_r': { param: globalLfoOscs[1].frequency, scalar: 20 },
+        'l3_r': { param: globalLfoOscs[2].frequency, scalar: 20 },
+        'l1_d': { param: lfoOuts[0].gain, scalar: 1 },
+        'l2_d': { param: lfoOuts[1].gain, scalar: 1 },
+        'l3_d': { param: lfoOuts[2].gain, scalar: 1 }
+      }
+
+      for (let i = 1; i <= 3; i++) {
+        noteGroup.oscNodes[i].forEach(vNode => {
+          const detuneParam = vNode.type === 'noise' ? vNode.bq.detune : vNode.detune
+          targets['g_pit'].params.push(detuneParam)
+          targets[`o${i}_p`].params.push(detuneParam)
+        })
+      }
+
+      const sources = [
+        { node: lfoOuts[0], dict: modMatrix.lfo0 },
+        { node: lfoOuts[1], dict: modMatrix.lfo1 },
+        { node: lfoOuts[2], dict: modMatrix.lfo2 },
+        { node: envCvs[0], dict: modMatrix.env0 },
+        { node: envCvs[1], dict: modMatrix.env1 },
+        { node: envCvs[2], dict: modMatrix.env2 }
+      ]
+
+      sources.forEach(src => {
+        Object.keys(src.dict).forEach(targetKey => {
+          const amount = src.dict[targetKey]
+          if (Math.abs(amount) > 0.001) {
+            const targetInfo = targets[targetKey]
+            if(!targetInfo) return // Pastikan target valid
+            const amountGain = audioCtx.createGain()
+            amountGain.gain.value = amount * targetInfo.scalar
+            src.node.connect(amountGain)
+            noteGroup.matrixGains.push(amountGain)
+
+            if (targetInfo.param) {
+              amountGain.connect(targetInfo.param)
+            } else if (targetInfo.params) {
+              targetInfo.params.forEach(p => amountGain.connect(p))
+            }
+          }
+        })
+      })
+
+      // Jika matriks tidak menyentuh Global Volume sama sekali, buka katup manual (agar ada suara jika dimatikan sembarangan)
+      let volumeModulated = false;
+      ['env0', 'env1', 'env2', 'lfo0', 'lfo1', 'lfo2'].forEach(s => { if(Math.abs(modMatrix[s].g_vol) > 0.001) volumeModulated = true })
+      if (!volumeModulated) noteGain.gain.linearRampToValueAtTime(1.0, now + 0.01)
+
+      activeNotes.set(voiceId, noteGroup)
+    }
+
+    function glideVoice(voice, targetMidi) {
+      const now = audioCtx.currentTime, baseFreq = noteToFreq(targetMidi)
+      const pTime = portamentoTime > 0 ? portamentoTime : 0.01
+
+      for (let i = 1; i <= 3; i++) {
+        if (voice.oscNodes[i]) {
+          const conf = synthConfig[`osc${i}`], freq = baseFreq * Math.pow(2, (conf.coarse + conf.fine / 100) / 12)
+          voice.oscNodes[i].forEach(vNode => {
+            const param = vNode.type === 'noise' ? vNode.bq.frequency : vNode.frequency
+            param.cancelScheduledValues(now); param.setValueAtTime(param.value, now)
+            if (pTime > 0.01) param.exponentialRampToValueAtTime(Math.max(1, freq), now + pTime)
+            else param.setValueAtTime(freq, now)
+          })
+        }
+      }
+    }
+
+    function triggerKillVoice(voiceId) {
+      const noteGroup = activeNotes.get(voiceId)
+      if (!noteGroup) return
+      
+      activeNotes.delete(voiceId)
+      try {
+        noteGroup.released = true; noteGroup.releaseTime = Date.now()
+        const now = audioCtx.currentTime; let maxRelease = 0.05
+
+        noteGroup.envConnections.forEach(conn => {
+          try {
+            const env = envs[conn.envIndex]
+            if (env.release > maxRelease) maxRelease = env.release
+            conn.param.cancelScheduledValues(now)
+            conn.param.setValueAtTime(conn.param.value, now)
+            conn.param.exponentialRampToValueAtTime(0.0001, now + env.release)
+          } catch(e) {}
+        })
+
+        if (!noteGroup.envConnections.find(c => c.param === noteGroup.mainGainNode.gain)) {
+          try {
+            noteGroup.mainGainNode.gain.cancelScheduledValues(now)
+            noteGroup.mainGainNode.gain.setValueAtTime(noteGroup.mainGainNode.gain.value, now)
+            noteGroup.mainGainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.05)
+          } catch(e) {}
+        }
+        setTimeout(() => { 
+          noteGroup.nodes.forEach(n => { try { n.stop() } catch (e) {} }) 
+          
+          // PENTING: Putus koneksi dari node Global untuk mencegah memory/CPU leak
+          if (noteGroup.lfoGains) {
+            noteGroup.lfoGains.forEach(conn => {
+              try { globalLfoOscs[conn.globalIndex].disconnect(conn.localNode) } catch (e) {}
+            })
+          }
+          if (noteGroup.matrixGains) {
+             noteGroup.matrixGains.forEach(gain => { try { gain.disconnect() } catch(e) {} })
+          }
+          if (noteGroup.mainGainNode) {
+             try { noteGroup.mainGainNode.disconnect() } catch(e) {}
+          }
+        }, maxRelease * 1000 + 50)
+      } catch(err) {
+        noteGroup.nodes.forEach(n => { try { n.stop() } catch (e) {} })
+      }
+    }
+
+    function playNote(midiNote, customLabel = '') {
+      if (!audioCtx) return
+      
+      if (!heldMidiNotes.includes(midiNote)) heldMidiNotes.push(midiNote)
+
+      if (isMonoMode) {
+        if (activeNotes.has('mono')) {
+          const voice = activeNotes.get('mono'); voice.currentMidi = midiNote
+          glideVoice(voice, midiNote)
+        } else initVoice('mono', midiNote)
+      } else {
+        if (activeNotes.has(midiNote)) triggerKillVoice(midiNote)
+        initVoice(midiNote, midiNote)
+      }
+
+      document.getElementById('active-key-display').innerText = customLabel || getNoteNameFromMidi(midiNote)
+      highlightPianoKey(midiNote, true)
+
+      const geom = keyPositions[midiNote]
+      if (geom) {
+        const existingBlock = waterfallBlocks.find(b => b.midiNote === midiNote && b.active)
+        if (existingBlock) existingBlock.active = false
+        waterfallBlocks.push({ midiNote: midiNote, y: 0, h: 0, active: true, color: getNoteColor(midiNote), startTime: Date.now() })
+      }
+    }
+
+    function stopNote(midiNote) {
+      const idx = heldMidiNotes.indexOf(midiNote)
+      if (idx > -1) heldMidiNotes.splice(idx, 1)
+
+      highlightPianoKey(midiNote, false)
+      const activeBlock = waterfallBlocks.find(b => b.midiNote === midiNote && b.active)
+      if (activeBlock) activeBlock.active = false
+
+      if (isMonoMode) {
+        if (heldMidiNotes.length > 0) {
+          const prevMidi = heldMidiNotes[heldMidiNotes.length - 1]
+          const voice = activeNotes.get('mono')
+          if (voice) { voice.currentMidi = prevMidi; glideVoice(voice, prevMidi) }
+          document.getElementById('active-key-display').innerText = getNoteNameFromMidi(prevMidi)
+        } else {
+          triggerKillVoice('mono')
+          document.getElementById('active-key-display').innerText = '-'
+        }
+      } else {
+        triggerKillVoice(midiNote)
+        if (heldMidiNotes.length > 0) document.getElementById('active-key-display').innerText = getNoteNameFromMidi(heldMidiNotes[heldMidiNotes.length - 1])
+        else document.getElementById('active-key-display').innerText = '-'
+      }
+    }
+
+    function releaseAllNotes() {
+      heldMidiNotes.length = 0
+      const ids = Array.from(activeNotes.keys())
+      ids.forEach(id => triggerKillVoice(id))
+      activeMouseNotes.forEach((midi, elem) => highlightPianoKey(midi, false))
+      activeMouseNotes.clear(); activeKeyboardKeys.clear()
+      document.getElementById('active-key-display').innerText = '-'
+      waterfallBlocks.forEach(b => b.active = false)
+    }
+    
+    window.addEventListener('blur', releaseAllNotes)
+    document.addEventListener('visibilitychange', () => { if(document.hidden) releaseAllNotes() })
+    document.addEventListener('mouseleave', releaseAllNotes) 
+
+    function getNoteColor(midi) {
+      const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#ec4899', '#14b8a6']
+      return colors[midi % colors.length]
+    }
+
+    function highlightPianoKey(midiNote, isActive) {
+      if (midiNote < 21 || midiNote > 108) return
+      const keyElement = document.querySelector(`[data-midi="${midiNote}"]`)
+      if (keyElement) {
+        if (isActive) {
+          if (keyElement.classList.contains('bg-slate-900')) {
+            keyElement.classList.remove('bg-slate-900'); keyElement.classList.add('bg-orange-500', 'shadow-lg', 'shadow-orange-500/50')
+          } else {
+            keyElement.classList.remove('bg-white'); keyElement.classList.add('bg-amber-400', 'shadow-lg', 'shadow-amber-400/50')
+          }
+        } else {
+          const rem = midiNote % 12, isBlack = [1, 3, 6, 8, 10].includes(rem)
+          if (isBlack) {
+            keyElement.className = keyElement.className.replace(/bg-orange-500|shadow-lg|shadow-orange-500\/50/g, '').trim()
+            keyElement.classList.add('bg-slate-900')
+          } else {
+            keyElement.className = keyElement.className.replace(/bg-amber-400|shadow-lg|shadow-amber-400\/50/g, '').trim()
+            keyElement.classList.add('bg-white')
+          }
+        }
+      }
+    }
+
+    function createPianoLayout() {
+      const pianoContainer = document.getElementById('piano')
+      pianoContainer.innerHTML = ''
+      pianoKeys.forEach((key) => {
+        const keyElement = document.createElement('div')
+        keyElement.dataset.midi = key.midi
+        const geom = keyPositions[key.midi]
+        if (!geom) return
+
+        if (!geom.isBlack) {
+          keyElement.className = 'absolute bg-white border-r border-slate-300 rounded-b-md cursor-pointer transition-all duration-75 flex items-end justify-center pb-1 text-slate-800 font-extrabold text-[8px] hover:bg-slate-100 shadow-sm'
+          keyElement.style.width = `${geom.width}%`; keyElement.style.left = `${geom.left}%`; keyElement.style.height = '100%'; keyElement.style.zIndex = '10'
+          if (key.name) keyElement.innerText = key.name
+        } else {
+          keyElement.className = 'absolute bg-slate-900 border-l border-r border-slate-950 rounded-b cursor-pointer transition-all duration-75 flex items-end justify-center pb-1 text-slate-500 font-bold text-[7px] hover:bg-slate-800'
+          keyElement.style.width = `${geom.width}%`; keyElement.style.left = `${geom.left}%`; keyElement.style.height = '60%'; keyElement.style.zIndex = '20'
+        }
+
+        const triggerNoteStart = (e) => {
+          e.preventDefault(); initAudio(); activeMouseNotes.set(keyElement, key.midi); playNote(key.midi)
+        }
+        const triggerNoteStop = (e) => {
+          e.preventDefault()
+          if (activeMouseNotes.has(keyElement)) { stopNote(activeMouseNotes.get(keyElement)); activeMouseNotes.delete(keyElement) }
+        }
+
+        keyElement.addEventListener('mousedown', triggerNoteStart)
+        keyElement.addEventListener('mouseup', triggerNoteStop)
+        keyElement.addEventListener('mouseleave', triggerNoteStop)
+        keyElement.addEventListener('touchstart', triggerNoteStart, { passive: false })
+        keyElement.addEventListener('touchend', triggerNoteStop, { passive: false })
+        keyElement.addEventListener('touchcancel', triggerNoteStop, { passive: false })
+        pianoContainer.appendChild(keyElement)
+      })
+    }
+
+    window.addEventListener('mouseup', () => {
+      activeMouseNotes.forEach((midi) => stopNote(midi))
+      activeMouseNotes.clear()
+    })
+
+    window.addEventListener('keydown', (e) => {
+      if (document.activeElement.tagName === 'INPUT' && document.activeElement.type !== 'range') return
+      const key = e.key.toLowerCase()
+
+      if (e.key === 'ArrowUp') { e.preventDefault(); if (octaveOffset < maxOctave) { octaveOffset++; document.getElementById('octave-display').innerText = octaveOffset }; return }
+      if (e.key === 'ArrowDown') { e.preventDefault(); if (octaveOffset > minOctave) { octaveOffset--; document.getElementById('octave-display').innerText = octaveOffset }; return }
+      if (e.key === 'ArrowRight') { e.preventDefault(); if (transposeOffset < 12) { transposeOffset++; document.getElementById('transpose-display').innerText = `${transposeOffset > 0 ? '+' : ''}${transposeOffset} st` }; return }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); if (transposeOffset > -12) { transposeOffset--; document.getElementById('transpose-display').innerText = `${transposeOffset > 0 ? '+' : ''}${transposeOffset} st` }; return }
+
+      if (keyMap[key] && !activeKeyboardKeys.has(key)) {
+        initAudio()
+        const targetMidi = (octaveOffset * 12) + keyMap[key].note + transposeOffset
+        activeKeyboardKeys.set(key, targetMidi)
+        playNote(targetMidi, `${keyMap[key].name} (${key.toUpperCase()})`)
+      }
+    })
+
+    window.addEventListener('keyup', (e) => {
+      const key = e.key.toLowerCase()
+      if (keyMap[key]) {
+        if (activeKeyboardKeys.has(key)) {
+          stopNote(activeKeyboardKeys.get(key))
+          activeKeyboardKeys.delete(key)
+        } else {
+          const targetMidi = (octaveOffset * 12) + keyMap[key].note + transposeOffset
+          stopNote(targetMidi)
+        }
+      }
+    })
+
+    function switchTab(tabName) {
+      const panels = ['osc', 'lfo', 'adsr', 'matrix', 'filter', 'effects']
+      panels.forEach(p => {
+        document.getElementById(`panel-${p}`).classList.add('hidden')
+        document.getElementById(`tab-btn-${p}`).classList.remove('tab-active')
+        document.getElementById(`tab-btn-${p}`).classList.add('text-slate-400')
+      })
+      document.getElementById(`panel-${tabName}`).classList.remove('hidden')
+      document.getElementById(`tab-btn-${tabName}`).classList.add('tab-active')
+      document.getElementById(`tab-btn-${tabName}`).classList.remove('text-slate-400')
+      setTimeout(() => resizeCanvas(), 50)
+    }
+
+    function selectLfo(index) {
+      activeLfo = index
+      for(let i=0; i<3; i++) {
+        document.getElementById(`lfo-tab-${i}`).className = i === index 
+          ? "sub-tab-active px-4 py-1.5 rounded-md text-[10px] font-black tracking-wider transition" 
+          : "text-slate-400 hover:text-slate-200 px-4 py-1.5 rounded-md text-[10px] font-black tracking-wider transition"
+      }
+      const lfo = lfos[index]; setLfoShape(lfo.shape)
+      const rKnob = document.getElementById('lfo-rate'); rKnob.dataset.value = lfo.rate; renderKnobSVG(rKnob); document.getElementById('lfo-rate-val').innerText = `${lfo.rate.toFixed(3)} Hz`
+    }
+
+    function selectEnv(index) {
+      activeEnv = index
+      for(let i=0; i<3; i++) {
+        document.getElementById(`env-tab-${i}`).className = i === index 
+          ? "sub-tab-active px-3 py-1 rounded-md text-[10px] font-black tracking-wider transition" 
+          : "text-slate-400 hover:text-slate-200 px-3 py-1 rounded-md text-[10px] font-black tracking-wider transition"
+      }
+      const env = envs[index]
+      
+      const binds = [
+        { id: 'adsr-attack', val: env.attack, txt: `${env.attack.toFixed(2)}s` },
+        { id: 'adsr-decay', val: env.decay, txt: `${env.decay.toFixed(2)}s` },
+        { id: 'adsr-sustain', val: env.sustain, txt: `${Math.round(env.sustain * 100)}%` },
+        { id: 'adsr-release', val: env.release, txt: `${env.release.toFixed(2)}s` }
+      ]
+      binds.forEach(b => {
+        const k = document.getElementById(b.id)
+        k.dataset.value = b.val; renderKnobSVG(k); document.getElementById(`${b.id}-val`).innerText = b.txt
+      })
+    }
+
+    function setOscShape(oscNum, shape) {
+      synthConfig[`osc${oscNum}`].shape = shape
+      const parent = document.querySelector(`#osc${oscNum}-shape-sine`).parentNode
+      parent.querySelectorAll('.osc-shape-btn').forEach(btn => {
+        btn.classList.remove('bg-blue-500/20', 'text-blue-400', 'bg-emerald-500/20', 'text-emerald-400', 'bg-violet-500/20', 'text-violet-400', 'bg-orange-500/20', 'text-orange-400')
+        btn.classList.add('text-slate-400', 'hover:bg-slate-800')
+      })
+      const colorClass = oscNum === 1 ? 'bg-blue-500/20 text-blue-400' : oscNum === 2 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-violet-500/20 text-violet-400'
+      const activeBtn = document.getElementById(`osc${oscNum}-shape-${shape}`)
+      activeBtn.classList.remove('text-slate-400', 'hover:bg-slate-800'); activeBtn.classList.add(...colorClass.split(' '))
+      
+      if (audioCtx) {
+        activeNotes.forEach(voice => {
+          if (voice.oscNodes && voice.oscNodes[oscNum]) {
+             voice.oscNodes[oscNum].forEach(vNode => {
+                if (shape !== 'noise' && vNode.type !== undefined) vNode.type = shape
+             })
+          }
+        })
+      }
+    }
+
+    function setLfoShape(shape) {
+      lfos[activeLfo].shape = shape;
+      ['sine', 'triangle', 'sawtooth', 'square'].forEach(b => {
+        const btn = document.getElementById(`lfo-shape-${b}`)
+        btn.classList.remove('bg-orange-500/20', 'text-orange-400'); btn.classList.add('text-slate-400', 'hover:bg-slate-800')
+      })
+      const activeBtn = document.getElementById(`lfo-shape-${shape}`)
+      activeBtn.classList.remove('text-slate-400', 'hover:bg-slate-800'); activeBtn.classList.add('bg-orange-500/20', 'text-orange-400')
+      if (globalLfoOscs[activeLfo]) globalLfoOscs[activeLfo].type = shape
+    }
+
+    function setFilterType(type) {
+      filterConfig.type = type;
+      ['lp', 'hp', 'bp'].forEach(b => {
+        const btn = document.getElementById(`filter-${b}`)
+        btn.classList.remove('bg-pink-500/20', 'text-pink-400'); btn.classList.add('text-slate-400', 'hover:bg-slate-800')
+      })
+      const idMap = { lowpass: 'lp', highpass: 'hp', bandpass: 'bp' }, activeBtn = document.getElementById(`filter-${idMap[type]}`)
+      activeBtn.classList.remove('text-slate-400', 'hover:bg-slate-800'); activeBtn.classList.add('bg-pink-500/20', 'text-pink-400')
+      activeNotes.forEach(note => { if (note.filterNode) note.filterNode.type = type })
+    }
+
+    function updateOscParams(oscNum) {
+      const cVal = parseInt(document.getElementById(`osc${oscNum}-coarse`).dataset.value)
+      synthConfig[`osc${oscNum}`].coarse = isNaN(cVal) ? 0 : cVal
+      
+      const fVal = parseInt(document.getElementById(`osc${oscNum}-fine`).dataset.value)
+      synthConfig[`osc${oscNum}`].fine = isNaN(fVal) ? 0 : fVal
+      
+      const vVal = parseFloat(document.getElementById(`osc${oscNum}-vol`).dataset.value)
+      synthConfig[`osc${oscNum}`].vol = isNaN(vVal) ? 0.8 : vVal
+      
+      const uvVal = parseInt(document.getElementById(`osc${oscNum}-voices`).dataset.value)
+      synthConfig[`osc${oscNum}`].unisonVoices = isNaN(uvVal) ? 1 : Math.max(1, uvVal)
+      
+      const udVal = parseFloat(document.getElementById(`osc${oscNum}-detune`).dataset.value)
+      synthConfig[`osc${oscNum}`].unisonDetune = isNaN(udVal) ? 0 : udVal
+      
+      document.getElementById(`osc${oscNum}-coarse-val`).innerText = `${synthConfig[`osc${oscNum}`].coarse > 0 ? '+' : ''}${synthConfig[`osc${oscNum}`].coarse} st`
+      document.getElementById(`osc${oscNum}-fine-val`).innerText = `${synthConfig[`osc${oscNum}`].fine > 0 ? '+' : ''}${synthConfig[`osc${oscNum}`].fine} ct`
+      document.getElementById(`osc${oscNum}-vol-val`).innerText = `${Math.round(synthConfig[`osc${oscNum}`].vol * 100)}%`
+      document.getElementById(`osc${oscNum}-voices-val`).innerText = synthConfig[`osc${oscNum}`].unisonVoices
+      document.getElementById(`osc${oscNum}-detune-val`).innerText = `${Math.round(synthConfig[`osc${oscNum}`].unisonDetune * 100)}%`
+
+      if (audioCtx) {
+        const now = audioCtx.currentTime
+        activeNotes.forEach((voice) => {
+          if (voice.oscGains && voice.oscGains[oscNum]) {
+            const targetVol = synthConfig[`osc${oscNum}`].vol / Math.sqrt(synthConfig[`osc${oscNum}`].unisonVoices)
+            if (isFinite(targetVol)) {
+              voice.oscGains[oscNum].gain.setTargetAtTime(targetVol, now, 0.05)
+            }
+          }
+          if (voice.oscNodes && voice.oscNodes[oscNum]) {
+            const baseFreq = noteToFreq(voice.currentMidi)
+            const freq = baseFreq * Math.pow(2, (synthConfig[`osc${oscNum}`].coarse + synthConfig[`osc${oscNum}`].fine / 100) / 12)
+            
+            // Penyesuaian real-time jika unison
+            if (voice.oscNodes[oscNum].length === synthConfig[`osc${oscNum}`].unisonVoices) {
+               for(let v = 0; v < voice.oscNodes[oscNum].length; v++) {
+                 const vNode = voice.oscNodes[oscNum][v]
+                 let detuneAmount = 0
+                 if (synthConfig[`osc${oscNum}`].unisonVoices > 1) {
+                   const spreadFraction = v / (synthConfig[`osc${oscNum}`].unisonVoices - 1)
+                   detuneAmount = (spreadFraction * 2 - 1) * (synthConfig[`osc${oscNum}`].unisonDetune * 100)
+                 }
+                 const targetDetuneParam = vNode.type === 'noise' ? vNode.bq.detune : vNode.detune
+                 targetDetuneParam.setTargetAtTime(detuneAmount, now, 0.05)
+                 
+                 const targetFreqParam = vNode.type === 'noise' ? vNode.bq.frequency : vNode.frequency
+                 targetFreqParam.setTargetAtTime(freq, now, 0.05)
+               }
+            }
+          }
+        })
+      }
+    }
+
+    function updateLfoParams() {
+      lfos[activeLfo].rate = parseFloat(document.getElementById('lfo-rate').dataset.value)
+      document.getElementById('lfo-rate-val').innerText = `${lfos[activeLfo].rate.toFixed(3)} Hz`
+      if (globalLfoOscs[activeLfo] && audioCtx) globalLfoOscs[activeLfo].frequency.setValueAtTime(lfos[activeLfo].rate, audioCtx.currentTime)
+    }
+
+    function updateAdsrParams() {
+      envs[activeEnv].attack = parseFloat(document.getElementById('adsr-attack').dataset.value)
+      envs[activeEnv].decay = parseFloat(document.getElementById('adsr-decay').dataset.value)
+      envs[activeEnv].sustain = parseFloat(document.getElementById('adsr-sustain').dataset.value)
+      envs[activeEnv].release = parseFloat(document.getElementById('adsr-release').dataset.value)
+      document.getElementById('adsr-attack-val').innerText = `${envs[activeEnv].attack.toFixed(2)}s`
+      document.getElementById('adsr-decay-val').innerText = `${envs[activeEnv].decay.toFixed(2)}s`
+      document.getElementById('adsr-sustain-val').innerText = `${Math.round(envs[activeEnv].sustain * 100)}%`
+      document.getElementById('adsr-release-val').innerText = `${envs[activeEnv].release.toFixed(2)}s`
+    }
+
+    function updateFilterParams() {
+      filterConfig.cutoff = parseFloat(document.getElementById('filter-cutoff').dataset.value)
+      filterConfig.q = parseFloat(document.getElementById('filter-q').dataset.value)
+      document.getElementById('filter-cutoff-val').innerText = `${Math.round(filterConfig.cutoff)} Hz`
+      document.getElementById('filter-q-val').innerText = filterConfig.q.toFixed(1)
+      if (audioCtx) {
+        activeNotes.forEach(note => {
+          if (note.filterNode) {
+            note.filterNode.frequency.setTargetAtTime(filterConfig.cutoff, audioCtx.currentTime, 0.05)
+            note.filterNode.Q.setTargetAtTime(filterConfig.q, audioCtx.currentTime, 0.05)
+          }
+        })
+      }
+    }
+
+    function updateMasterParams() {
+      const masterVal = parseFloat(document.getElementById('master-vol').dataset.value)
+      if (audioCtx && masterGain) masterGain.gain.setTargetAtTime(masterVal, audioCtx.currentTime, 0.05)
+      document.getElementById('master-vol-val').innerText = `${Math.round(masterVal * 100)}%`
+      
+      portamentoTime = parseFloat(document.getElementById('portamento').dataset.value)
+      document.getElementById('portamento-val').innerText = `${portamentoTime.toFixed(2)}s`
+    }
+
+    function updateReverbParams() {
+      if (!audioCtx) return
+      const wetVal = parseFloat(document.getElementById('reverb-wet').dataset.value), sizeVal = parseFloat(document.getElementById('reverb-size').dataset.value)
+      reverbWet.gain.setTargetAtTime(wetVal, audioCtx.currentTime, 0.05)
+      document.getElementById('reverb-wet-val').innerText = `${Math.round(wetVal * 100)}%`; document.getElementById('reverb-size-val').innerText = `${sizeVal.toFixed(1)}s`
+      updateReverbImpulseResponse()
+    }
+
+    function updateDelayParams() {
+      if (!audioCtx) return
+      const timeVal = parseFloat(document.getElementById('delay-time').dataset.value), fbVal = parseFloat(document.getElementById('delay-feedback').dataset.value), wetVal = parseFloat(document.getElementById('delay-wet').dataset.value)
+      delayNode.delayTime.setTargetAtTime(timeVal, audioCtx.currentTime, 0.05)
+      delayFeedback.gain.setTargetAtTime(fbVal, audioCtx.currentTime, 0.05)
+      delayWet.gain.setTargetAtTime(wetVal, audioCtx.currentTime, 0.05)
+      document.getElementById('delay-wet-val').innerText = `${Math.round(wetVal * 100)}%`; document.getElementById('delay-time-val').innerText = `${timeVal.toFixed(2)}s`; document.getElementById('delay-feedback-val').innerText = `${Math.round(fbVal * 100)}%`
+    }
+
+    function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+      const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0
+      return { x: centerX + (radius * Math.cos(angleInRadians)), y: centerY + (radius * Math.sin(angleInRadians)) }
+    }
+
+    function describeArc(x, y, radius, startAngle, endAngle) {
+      const start = polarToCartesian(x, y, radius, endAngle), end = polarToCartesian(x, y, radius, startAngle)
+      const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1'
+      return ['M', start.x, start.y, 'A', radius, radius, 0, largeArcFlag, 0, end.x, end.y].join(' ')
+    }
+
+    function renderKnobSVG(knob) {
+      const val = parseFloat(knob.dataset.value), min = parseFloat(knob.dataset.min), max = parseFloat(knob.dataset.max)
+      const color = knob.dataset.color || '#f97316', pct = (val - min) / (max - min)
+      const startAngle = -135, endAngle = 135, angle = startAngle + pct * (endAngle - startAngle)
+      const radius = 21, strokeWidth = 4.5, cx = 30, cy = 30
+      
+      let fillArc = ''
+      if (pct > 0 || (min < 0 && max > 0)) {
+        if (min < 0 && max > 0) {
+          const midAngle = startAngle + ((0 - min) / (max - min)) * (endAngle - startAngle)
+          if (angle > midAngle) fillArc = `<path d="${describeArc(cx, cy, radius, midAngle, angle)}" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round" />`
+          else fillArc = `<path d="${describeArc(cx, cy, radius, angle, midAngle)}" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round" />`
+        } else {
+          fillArc = `<path d="${describeArc(cx, cy, radius, startAngle, angle)}" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round" />`
+        }
+      }
+
+      knob.innerHTML = `
+        <svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-2xl select-none">
+          <circle cx="${cx}" cy="${cy}" r="26" fill="#181e2b" stroke="#0f141f" stroke-width="1.8"/>
+          <path d="${describeArc(cx, cy, radius, startAngle, endAngle)}" fill="none" stroke="#0b0e14" stroke-width="${strokeWidth}" stroke-linecap="round"/>
+          ${fillArc}
+          <g transform="rotate(${angle}, ${cx}, ${cy})">
+            <circle cx="${cx}" cy="${cy}" r="15" fill="#0f131c" stroke="#2a3345" stroke-width="1.2"/>
+            <line x1="${cx}" y1="${cy - 15}" x2="${cx}" y2="${cy - 6}" stroke="${color}" stroke-width="3" stroke-linecap="round"/>
+          </g>
+        </svg>
+      `
+    }
+
+    function initKnobs() {
+      document.querySelectorAll('.synth-knob').forEach(knob => {
+        renderKnobSVG(knob)
+        let isDragging = false, startY = 0, startValue = 0
+
+        const triggerChange = () => {
+          const id = knob.id
+          if (id.startsWith('osc1')) updateOscParams(1)
+          else if (id.startsWith('osc2')) updateOscParams(2)
+          else if (id.startsWith('osc3')) updateOscParams(3)
+          else if (id.startsWith('lfo')) updateLfoParams()
+          else if (id.startsWith('adsr')) updateAdsrParams()
+          else if (id.startsWith('filter')) updateFilterParams()
+          else if (id === 'master-vol' || id === 'portamento') updateMasterParams()
+          else if (id.startsWith('reverb')) updateReverbParams()
+          else if (id.startsWith('delay')) updateDelayParams()
+          else if (id.startsWith('mat-')) {
+             const parts = id.split('-')
+             const srcId = parts[1], targetId = parts.slice(2).join('-')
+             modMatrix[srcId][targetId] = parseFloat(knob.dataset.value)
+          }
+        }
+
+        const applySnapping = (val, min, max, step) => {
+          let newValue = val, range = max - min, snapStr = knob.dataset.snap
+          if (snapStr) {
+            const pts = JSON.parse(snapStr), thr = range * 0.045
+            for (const pt of pts) { if (Math.abs(newValue - pt) < thr) { newValue = pt; break } }
+          }
+          newValue = Math.max(min, Math.min(max, newValue))
+          if (step >= 0.001) {
+             const inv = 1.0 / step
+             newValue = Math.round(newValue * inv) / inv
+          }
+          return newValue
+        }
+
+        knob.addEventListener('pointerdown', (e) => {
+          isDragging = true; startY = e.pageY || e.touches?.[0].pageY; startValue = parseFloat(knob.dataset.value)
+          knob.setPointerCapture(e.pointerId); initAudio()
+        })
+        knob.addEventListener('pointermove', (e) => {
+          if (!isDragging) return
+          const deltaY = startY - (e.pageY || e.touches?.[0].pageY)
+          const min = parseFloat(knob.dataset.min), max = parseFloat(knob.dataset.max), step = parseFloat(knob.dataset.step) || 1
+          const sensitivity = (max - min) / 150
+          knob.dataset.value = applySnapping(startValue + deltaY * sensitivity, min, max, step)
+          renderKnobSVG(knob); triggerChange()
+        })
+        knob.addEventListener('pointerup', (e) => {
+          if (!isDragging) return
+          isDragging = false; knob.releasePointerCapture(e.pointerId); document.activeElement.blur()
+        })
+        knob.addEventListener('wheel', (e) => {
+          e.preventDefault(); initAudio()
+          const min = parseFloat(knob.dataset.min), max = parseFloat(knob.dataset.max), step = parseFloat(knob.dataset.step) || 1
+          const dir = e.deltaY < 0 ? 1 : -1, range = max - min; let change = step
+          if (range > 50 && step < 1) change = Math.max(step, range * 0.02)
+          else if (range <= 5) change = step
+          
+          let newValue = parseFloat(knob.dataset.value) + (dir * change)
+          newValue = Math.max(min, Math.min(max, newValue))
+          if (step >= 0.001) {
+             const inv = 1.0 / step
+             newValue = Math.round(newValue * inv) / inv
+          }
+          knob.dataset.value = newValue
+          renderKnobSVG(knob); triggerChange()
+        }, { passive: false })
+        knob.addEventListener('dblclick', () => {
+          let def = 0; const id = knob.id
+          if (id.includes('coarse')) def = id.includes('osc2') ? -12 : 0
+          else if (id.includes('fine')) def = id.includes('osc3') ? 15 : 0
+          else if (id.includes('vol')) def = id.includes('osc1') ? 0.8 : (id.includes('osc2') ? 0.6 : (id.includes('osc3') ? 0.05 : 1.0))
+          else if (id.includes('voices')) def = 1
+          else if (id.includes('detune')) def = id.includes('osc1') ? 0.15 : 0.0
+          else if (id.includes('lfo-rate')) def = 3.0
+          else if (id.includes('adsr-attack')) def = 0.05
+          else if (id.includes('adsr-decay')) def = 0.3
+          else if (id.includes('adsr-sustain')) def = 0.7
+          else if (id.includes('adsr-release')) def = 0.5
+          else if (id.includes('filter-cutoff')) def = 20000
+          else if (id.includes('filter-q')) def = 1.0
+          else if (id.includes('reverb-size')) def = 1.5
+          else if (id.includes('reverb-wet')) def = 0.2
+          else if (id.includes('delay-time')) def = 0.3
+          else if (id.includes('delay-feedback')) def = 0.4
+          else if (id.includes('delay-wet')) def = 0.3
+          else if (id.includes('master')) def = 1.0
+          else if (id.includes('portamento')) def = 0.0
+          else if (id.startsWith('mat-')) def = (id === 'mat-env0-g_vol') ? 1 : 0
+          knob.dataset.value = def; renderKnobSVG(knob); triggerChange()
+        })
+      })
+    }
+
+    const lfoCanvas = document.getElementById('lfoCanvas'), lfoCtx = lfoCanvas.getContext('2d')
+    const adsrCanvas = document.getElementById('adsrCanvas'), adsrCtx = adsrCanvas.getContext('2d')
+
+    function drawModulators() {
+      const lfoW = lfoCanvas.width, lfoH = lfoCanvas.height, actLfo = lfos[activeLfo]
+      lfoCtx.fillStyle = '#090d16'; lfoCtx.fillRect(0, 0, lfoW, lfoH)
+      lfoCtx.strokeStyle = 'rgba(51, 65, 85, 0.15)'; lfoCtx.lineWidth = 1; lfoCtx.beginPath()
+      lfoCtx.moveTo(0, lfoH / 2); lfoCtx.lineTo(lfoW, lfoH / 2); lfoCtx.stroke()
+
+      lfoCtx.strokeStyle = '#f97316'; lfoCtx.lineWidth = 2; lfoCtx.beginPath()
+      for (let x = 0; x < lfoW; x++) {
+        const ratio = x / lfoW, angle = ratio * Math.PI * 2; let yVal = 0
+        if (actLfo.shape === 'sine') yVal = Math.sin(angle)
+        else if (actLfo.shape === 'triangle') yVal = ratio < 0.25 ? ratio * 4 : ratio < 0.75 ? 2 - (ratio * 4) : (ratio * 4) - 4
+        else if (actLfo.shape === 'sawtooth') yVal = (ratio * 2) - 1
+        else if (actLfo.shape === 'square') yVal = ratio < 0.5 ? 1 : -1
+        const yPos = (lfoH / 2) - (yVal * (lfoH / 3))
+        if (x === 0) lfoCtx.moveTo(x, yPos); else lfoCtx.lineTo(x, yPos)
+      }
+      lfoCtx.stroke()
+
+      if (audioCtx) {
+        const sweepRatio = (audioCtx.currentTime * actLfo.rate) % 1.0, sweepX = sweepRatio * lfoW
+        lfoCtx.strokeStyle = 'rgba(249, 115, 22, 0.5)'; lfoCtx.lineWidth = 1.5; lfoCtx.beginPath()
+        lfoCtx.moveTo(sweepX, 0); lfoCtx.lineTo(sweepX, lfoH); lfoCtx.stroke()
+
+        lfoCtx.fillStyle = '#f97316'; lfoCtx.beginPath(); let activeY = 0
+        if (actLfo.shape === 'sine') activeY = Math.sin(sweepRatio * Math.PI * 2)
+        else if (actLfo.shape === 'triangle') activeY = sweepRatio < 0.25 ? sweepRatio * 4 : sweepRatio < 0.75 ? 2 - (sweepRatio * 4) : (sweepRatio * 4) - 4
+        else if (actLfo.shape === 'sawtooth') activeY = (sweepRatio * 2) - 1
+        else if (actLfo.shape === 'square') activeY = sweepRatio < 0.5 ? 1 : -1
+        lfoCtx.arc(sweepX, (lfoH / 2) - (activeY * (lfoH / 3)), 4, 0, Math.PI * 2); lfoCtx.fill()
+      }
+
+      const adsrW = adsrCanvas.width, adsrH = adsrCanvas.height, actEnv = envs[activeEnv]
+      adsrCtx.fillStyle = '#090d16'; adsrCtx.fillRect(0, 0, adsrW, adsrH)
+
+      const totalT = actEnv.attack + actEnv.decay + 1.0 + actEnv.release
+      const wAttack = (actEnv.attack / totalT) * adsrW, wDecay = (actEnv.decay / totalT) * adsrW, wSustain = (1.0 / totalT) * adsrW, wRelease = (actEnv.release / totalT) * adsrW
+
+      const paddingY = 8, maxH = adsrH - paddingY*2
+      const yStart = adsrH - paddingY
+      const yPeak = paddingY
+      const ySus = adsrH - paddingY - (actEnv.sustain * maxH)
+
+      const xA = 0, yA = yStart, xB = wAttack, yB = yPeak, xC = wAttack + wDecay, yC = ySus
+      const xD = wAttack + wDecay + wSustain, yD = yC, xE = adsrW, yE = yStart
+
+      adsrCtx.strokeStyle = '#8b5cf6'; adsrCtx.lineWidth = 2.5; adsrCtx.beginPath()
+      adsrCtx.moveTo(xA, yA); adsrCtx.lineTo(xB, yB); adsrCtx.lineTo(xC, yC); adsrCtx.lineTo(xD, yD); adsrCtx.lineTo(xE, yE); adsrCtx.stroke()
+
+      const grad = adsrCtx.createLinearGradient(0, yPeak, 0, yStart)
+      grad.addColorStop(0, 'rgba(139, 92, 246, 0.25)'); grad.addColorStop(1, 'rgba(139, 92, 246, 0)')
+      adsrCtx.fillStyle = grad; adsrCtx.beginPath()
+      adsrCtx.moveTo(xA, yA); adsrCtx.lineTo(xB, yB); adsrCtx.lineTo(xC, yC); adsrCtx.lineTo(xD, yD); adsrCtx.lineTo(xE, yE); adsrCtx.lineTo(xA, yA); adsrCtx.fill()
+
+      activeNotes.forEach((voice, midi) => {
+        const conn = voice.envConnections.find(c => c.envIndex === activeEnv)
+        if (!conn) return 
+        const elapsed = (Date.now() - voice.startTime) / 1000; let curX = 0, curY = yStart
+        if (!voice.released) {
+          if (elapsed < actEnv.attack) {
+            curX = (elapsed / actEnv.attack) * wAttack; curY = yStart + (elapsed / actEnv.attack) * (yPeak - yStart)
+          } else if (elapsed < actEnv.attack + actEnv.decay) {
+            const ratio = (elapsed - actEnv.attack) / actEnv.decay
+            curX = wAttack + ratio * wDecay; curY = yPeak + ratio * (ySus - yPeak)
+          } else {
+            const sRatio = Math.min(1.0, elapsed - actEnv.attack - actEnv.decay)
+            curX = wAttack + wDecay + sRatio * wSustain; curY = ySus
+          }
+        } else {
+          const ratio = Math.min(1.0, (Date.now() - voice.releaseTime) / 1000 / actEnv.release)
+          curX = wAttack + wDecay + wSustain + ratio * wRelease; curY = ySus + ratio * (yStart - ySus)
+        }
+        adsrCtx.fillStyle = getNoteColor(midi); adsrCtx.shadowBlur = 8; adsrCtx.shadowColor = getNoteColor(midi)
+        adsrCtx.beginPath(); adsrCtx.arc(curX, curY, 5, 0, Math.PI * 2); adsrCtx.fill(); adsrCtx.shadowBlur = 0
+      })
+    }
+
+    const canvas = document.getElementById('scopeCanvas'), canvasCtx = canvas.getContext('2d')
+    const wCanvas = document.getElementById('waterfallCanvas'), wCtx = wCanvas.getContext('2d')
+
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight
+      wCanvas.width = wCanvas.parentElement.clientWidth; wCanvas.height = wCanvas.parentElement.clientHeight
+      lfoCanvas.width = lfoCanvas.parentElement.clientWidth; lfoCanvas.height = lfoCanvas.parentElement.clientHeight
+      adsrCanvas.width = adsrCanvas.parentElement.clientWidth; adsrCanvas.height = adsrCanvas.parentElement.clientHeight
+    }
+
+    window.addEventListener('resize', () => { resizeCanvas(); createPianoLayout() })
+
+    function drawVisualizer() {
+      requestAnimationFrame(drawVisualizer)
+      drawModulators()
+      
+      if (analyserNode) {
+        const bufferLength = analyserNode.fftSize
+        const dataArray = new Uint8Array(bufferLength)
+        const freqArray = new Uint8Array(analyserNode.frequencyBinCount)
+        
+        analyserNode.getByteTimeDomainData(dataArray)
+        analyserNode.getByteFrequencyData(freqArray)
+        
+        canvasCtx.fillStyle = '#090d16'
+        canvasCtx.fillRect(0, 0, canvas.width, canvas.height)
+        
+        // --- 1. FFT SPECTRUM DENGAN SKALA LOGARITMA BASIS 2 ---
+        const minFreq = 20
+        const maxFreq = audioCtx.sampleRate / 2
+        const minLog = Math.log2(minFreq)
+        const maxLog = Math.log2(maxFreq)
+        
+        const gradient = canvasCtx.createLinearGradient(0, canvas.height, 0, 0)
+        gradient.addColorStop(0, 'rgba(139, 92, 246, 0.1)')
+        gradient.addColorStop(1, 'rgba(139, 92, 246, 0.6)')
+        
+        canvasCtx.fillStyle = gradient
+        canvasCtx.beginPath()
+        canvasCtx.moveTo(0, canvas.height)
+        
+        for (let i = 1; i < analyserNode.frequencyBinCount; i++) {
+          const freq = i * audioCtx.sampleRate / analyserNode.fftSize
+          if (freq < minFreq) continue
+          if (freq > maxFreq) break
+
+          // Mapping secara Logaritmik (Log 2)
+          const logPos = (Math.log2(freq) - minLog) / (maxLog - minLog)
+          const x = logPos * canvas.width
+          const v = freqArray[i] / 255.0
+          const y = canvas.height - (v * canvas.height * 0.95)
+          
+          canvasCtx.lineTo(x, y)
+        }
+        canvasCtx.lineTo(canvas.width, canvas.height)
+        canvasCtx.lineTo(0, canvas.height)
+        canvasCtx.fill()
+
+        // --- 2. OSILOSKOP STABIL KE TENGAH LAYAR ---
+        let trigger = 0
+        // Cari titik persilangan nol (Zero-crossing) dari gelombang naik
+        for (let i = 0; i < bufferLength / 2; i++) {
+          if (dataArray[i] <= 128 && dataArray[i + 1] > 128) {
+            trigger = i
+            break
+          }
+        }
+
+        canvasCtx.strokeStyle = '#f97316'
+        canvasCtx.lineWidth = 2.5
+        canvasCtx.shadowBlur = 6
+        canvasCtx.shadowColor = '#f97316'
+        canvasCtx.beginPath()
+        
+        const drawLen = 1024 
+        const sliceWidth = canvas.width / drawLen
+        let x = 0
+        
+        // Pindahkan titik Trigger agar berada persis di tengah kanvas
+        let startIdx = trigger - Math.floor(drawLen / 2)
+        if (startIdx < 0) startIdx += bufferLength // Bungkus (wrap) dengan aman
+
+        for (let i = 0; i < drawLen; i++) {
+          const dataIdx = (startIdx + i) % bufferLength 
+          const v = dataArray[dataIdx] / 128.0
+          const y = (v * canvas.height) / 2
+          
+          if (i === 0) canvasCtx.moveTo(x, y)
+          else canvasCtx.lineTo(x, y)
+          
+          x += sliceWidth
+        }
+        canvasCtx.stroke()
+        canvasCtx.shadowBlur = 0
+        
+        // Gambar Grid pembantu di akhir agar ada di atas spektrum (opsional, diletakkan di bawah gelombang)
+        canvasCtx.strokeStyle = 'rgba(51, 65, 85, 0.2)'
+        canvasCtx.lineWidth = 1
+        canvasCtx.beginPath()
+        canvasCtx.moveTo(0, canvas.height / 2)
+        canvasCtx.lineTo(canvas.width, canvas.height / 2)
+        canvasCtx.moveTo(canvas.width / 2, 0)
+        canvasCtx.lineTo(canvas.width / 2, canvas.height)
+        canvasCtx.stroke()
+      }
+
+      if (analyserL && analyserR) {
+        const dataL = new Uint8Array(analyserL.frequencyBinCount), dataR = new Uint8Array(analyserR.frequencyBinCount)
+        analyserL.getByteFrequencyData(dataL); analyserR.getByteFrequencyData(dataR)
+        let sumL = 0, sumR = 0
+        for (let i = 0; i < dataL.length; i++) sumL += dataL[i]
+        for (let i = 0; i < dataR.length; i++) sumR += dataR[i]
+        const targetL = Math.min(100, Math.max(0, ((sumL / dataL.length) / 120) * 100))
+        const targetR = Math.min(100, Math.max(0, ((sumR / dataR.length) / 120) * 100))
+        currentL = targetL > currentL ? targetL : currentL * 0.8 + targetL * 0.2
+        currentR = targetR > currentR ? targetR : currentR * 0.8 + targetR * 0.2
+        if (currentL > peakL) { peakL = currentL; peakHoldL = 35 } else { if (peakHoldL > 0) peakHoldL--; else peakL *= 0.95 }
+        if (currentR > peakR) { peakR = currentR; peakHoldR = 35 } else { if (peakHoldR > 0) peakHoldR--; else peakR *= 0.95 }
+        document.getElementById('db-level-bar-l').style.height = `${currentL}%`
+        document.getElementById('db-level-bar-r').style.height = `${currentR}%`
+        document.getElementById('db-peak-l').style.bottom = `${peakL}%`
+        document.getElementById('db-peak-r').style.bottom = `${peakR}%`
+      }
+
+      wCtx.fillStyle = 'rgba(8, 11, 17, 0.4)'; wCtx.fillRect(0, 0, wCanvas.width, wCanvas.height)
+      const speed = 2.8 
+      for (let i = waterfallBlocks.length - 1; i >= 0; i--) {
+        const block = waterfallBlocks[i], geom = keyPositions[block.midiNote]
+        if (!geom) continue
+        const xPos = (geom.left / 100) * wCanvas.width, width = (geom.width / 100) * wCanvas.width
+        if (block.active) block.h += speed; else block.y += speed
+        wCtx.fillStyle = block.color; wCtx.shadowBlur = 12; wCtx.shadowColor = block.color
+        wCtx.beginPath(); wCtx.roundRect(xPos + 0.5, wCanvas.height - (block.y + block.h), width - 1, block.h, 3); wCtx.fill()
+        wCtx.shadowBlur = 0 
+        if (wCanvas.height - (block.y + block.h) + block.h < 0) waterfallBlocks.splice(i, 1)
+      }
+    }
+
+    function initWaterfallMapping() {
+      const totalWhiteKeys = pianoKeys.filter(k => !k.isBlack).length, whiteWidthPct = 100 / totalWhiteKeys; let currentWhiteIndex = 0
+      pianoKeys.forEach((key) => {
+        if (!key.isBlack) { keyPositions[key.midi] = { left: currentWhiteIndex * whiteWidthPct, width: whiteWidthPct, isBlack: false }; currentWhiteIndex++ }
+      })
+      pianoKeys.forEach((key) => {
+        if (key.isBlack) {
+          const prevWhite = keyPositions[key.midi - 1]
+          keyPositions[key.midi] = { left: prevWhite ? prevWhite.left + (whiteWidthPct * 0.7) : 0, width: whiteWidthPct * 0.6, isBlack: true }
+        }
+      })
+    }
+
+    window.onload = () => {
+      initWaterfallMapping()
+      resizeCanvas()
+      createPianoLayout()
+      initKnobs()
+
+      updateOscParams(1); updateOscParams(2); updateOscParams(3)
+      selectLfo(0); selectEnv(0)
+      updateFilterParams()
+
+      document.getElementById('btn-start-audio').addEventListener('click', () => { initAudio() })
+    }
+  </script>
+</body>
+</html>
