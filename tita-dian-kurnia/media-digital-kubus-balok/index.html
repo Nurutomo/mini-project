@@ -57,6 +57,9 @@ textarea{width:100%;min-height:90px;border:0;border-bottom:5px solid #B9B472;bor
 #mr{font:600 12px Poppins,sans-serif;background:#FFDC57;border:0;border-radius:10px;padding:4px 10px;cursor:pointer}
 .spin{width:70px;height:70px;margin:24px auto;border-radius:10px;background:linear-gradient(135deg,#5aa8ff,#1d66c7);animation:spin 1.2s linear infinite}
 @keyframes spin{50%{transform:rotate(180deg) scale(.7)}to{transform:rotate(360deg)}}
+.tb{width:100%;border-collapse:separate;border-spacing:0 6px;font-size:clamp(13px,2vw,17px)}.tb th{color:#FFDC57;font-weight:600;text-align:left;padding:4px 12px}
+.tb td{background:#fff;color:#222;padding:10px 12px}.tb td:first-child{border-radius:14px 0 0 14px;font-weight:600}.tb td:last-child{border-radius:0 14px 14px 0}
+.tb tr{animation:pop .5s backwards}.lv{display:inline-block;background:#FFDC57;border-radius:10px;padding:2px 12px;font-weight:600;color:#3a2a00}
 details.rev summary{cursor:pointer;font-weight:600}details.rev p{margin:.5em 0}
 </style></head><body>
 <div class="stage"></div>
@@ -85,14 +88,16 @@ function burst(n){const c=['#FFDC57','#7be08a','#5aa8ff','#ef6b7a','#fff'];for(l
 function show(h,ctr){B.innerHTML=h;B.className=ctr?'ctr':'';void B.offsetWidth;B.classList.add('pop');scrollTo(0,0)}
 const nb=t=>`<button class="btn go" onclick="nx()">${t||'Lanjut ➜'}</button>`;
 function nx(){sfx('click');i++;draw()}
-function draw(){if(i==0)title();else if(i==1)cp();else if(i==2)tp();else if(i==3)materi();else if(i<24)mcq(MC[i-4]);else if(i<29)isi(ES[i-24]);else recap()}
+function draw(){if(i==0)title();else if(i==1)cp();else if(i==2)tp();else if(i==3)kog();else if(i==4)materi();else if(i<25)mcq(MC[i-5]);else if(i<30)isi(ES[i-25]);else recap()}
 function reset(){i=0;sc=0;ans={};ch={};ans2={};G={};D2={}}
 function startGame(){startMusic();nx()}
 function title(){show(`<span class="pill">Presentasi Kuis</span><h1>Kubus dan Balok</h1><p class="q">Materi ini membahas susunan bangun ruang, tampak dari berbagai arah, dan lokasi pada sistem berpetak. Siap menjawab 20 soal pilihan ganda dan 5 soal isian?</p><span class="pill">Matematika Kelas V SD/MI</span><br><button class="btn go" onclick="startGame()">Mulai Main ▶</button><p class="sm">Disusun oleh Tita Dian Kurnia (24206062)</p>`,1)}
 function cp(){show(`<span class="pill">Capaian Pembelajaran</span><h2>CP</h2><p class="q">${D.cp}</p>${nb()}`)}
 function tp(){show(`<span class="pill">Tujuan Pembelajaran</span><h2>TP</h2><ol>${D.tp.map(t=>`<li>${t}</li>`).join('')}</ol>${nb()}`)}
+function kog(){const r=[['1–5','C3','Menerapkan'],['6–12','C4','Menganalisis'],['13–20','C5','Mengevaluasi'],['21–22','C3','Menerapkan'],['23–25','C4','Menganalisis']];
+show(`<span class="pill">Pengelompokan Level Kognitif</span><h2>Level Kognitif Soal</h2><table class="tb"><tr><th>Nomor soal</th><th>Level kognitif</th><th>Kategori</th></tr>${r.map((x,k)=>`<tr style="animation-delay:${k*.09}s"><td>${x[0]}</td><td><span class="lv">${x[1]}</span></td><td>${x[2]}</td></tr>`).join('')}</table>${nb()}`)}
 function materi(){show(`<span class="pill">Uraian Materi Singkat</span><h2>Ayo Kenali Dulu!</h2><div class="g"><div class="c"><b>🧊 Kubus</b>6 sisi berbentuk persegi sama besar, 12 rusuk, 8 titik sudut. Volume = rusuk × rusuk × rusuk (pangkat tiga).</div><div class="c"><b>📦 Balok</b>6 sisi persegi panjang (bisa ada persegi), 12 rusuk, 8 titik sudut. Sisi yang berhadapan sama besar. Volume = p × l × t.</div><div class="c"><b>✂️ Jaring-jaring</b>Bangun ruang yang dibuka jadi bidang datar. Susunannya harus tepat agar saat dilipat tidak bertumpuk.</div><div class="c"><b>🧱 Mengonstruksi &amp; Mengurai</b>Menyusun kubus/balok jadi bangun gabungan, lalu memisahkannya lagi ke bagian penyusunnya.</div><div class="c"><b>👀 Tampak Depan, Atas, Samping</b>Tiap arah pandang menampilkan bagian yang berbeda dari bangun yang sama.</div><div class="c"><b>🗺️ Lokasi pada Petak</b>Titik (x, y): angka pertama mendatar, angka kedua tegak.</div></div>${nb('Mulai Kuis 🎮')}`)}
-function top_(q,t){return`<div class="top"><span class="pill">Soal ${q.n}/25</span><div class="bar"><i style="width:${(i-4)/25*100}%"></i></div><span class="pill">⭐ ${sc}</span></div><h2>${t}</h2><p class="q">${q.q}</p>`}
+function top_(q,t){return`<div class="top"><span class="pill">Soal ${q.n}/25</span><div class="bar"><i style="width:${(i-5)/25*100}%"></i></div><span class="pill">⭐ ${sc}</span></div><h2>${t}</h2><p class="q">${q.q}</p>`}
 function mcq(q){show(top_(q,'SOAL '+q.n)+`<div class="opts">${q.o.map((t,j)=>`<button class="opt" data-k="${'ABCD'[j]}"><b>${'ABCD'[j]}</b><span>${t}</span></button>`).join('')}</div><div id="f"></div>`);
 B.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{const ok=b.dataset.k==q.a;ans[q.n]=ok;ch[q.n]=b.dataset.k;B.querySelectorAll('.opt').forEach(x=>{x.disabled=true;if(x.dataset.k==q.a)x.classList.add('ok')});if(ok){sc++;sfx('ok');burst(18)}else{b.classList.add('bad');sfx('bad')}$('#f').innerHTML=nb()})}
 const state={thresholdHigh:0.88,thresholdMid:0.80};
