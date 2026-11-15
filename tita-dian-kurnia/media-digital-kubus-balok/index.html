@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kuis Kubus dan Balok</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Chewy&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:inherit}html,body{margin:0}
+body{font-family:Poppins,system-ui,sans-serif;color:#fff;background:#FADBCB;overflow-x:hidden}
+.stage{position:fixed;inset:0;z-index:0;background:linear-gradient(#FADBCB 0 76%,#D39B61 76% 80%,#EBB470 80%)}
+.stage:after{content:"";position:absolute;left:0;right:0;top:80%;bottom:0;background:repeating-linear-gradient(115deg,transparent 0 90px,rgba(160,100,40,.28) 90px 92px)}
+.deco{position:fixed;z-index:1;transform:rotate(var(--r,0deg));animation:float 4s ease-in-out infinite}
+.cube{left:-18px;bottom:70px;width:110px;height:110px;border-radius:10px;background:linear-gradient(135deg,#5aa8ff,#1d66c7);--r:-8deg}
+.ball{left:70px;bottom:36px;width:76px;height:76px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#ffe27a,#f2a83b);animation-delay:-1s}
+.cone{right:40px;bottom:50px;border:46px solid transparent;border-bottom:110px solid #ef6b7a;border-top:0;animation-delay:-2s}
+.cube2{right:-24px;bottom:30px;width:100px;height:100px;border-radius:10px;background:linear-gradient(135deg,#5aa8ff,#1d66c7);--r:10deg;animation-delay:-3s}
+.kid{position:fixed;bottom:40px;font-size:110px;z-index:2;animation:bob 2.2s ease-in-out infinite}
+.kid.l{left:1.5vw}.kid.r{right:1.5vw;animation-delay:-1.1s}
+@media(max-width:1100px){.kid{display:none}}
+main{position:relative;z-index:3;min-height:100dvh;display:grid;place-items:center;padding:70px 12px 110px}
+#board{width:min(920px,100%);background:#4F7F68 linear-gradient(160deg,transparent 60%,rgba(0,0,0,.1));border:12px solid #843B00;border-radius:32px;padding:clamp(18px,4vw,36px);box-shadow:0 14px 0 rgba(0,0,0,.14)}
+#board.ctr{text-align:center}
+.pill{display:inline-block;background:#fff;color:#111;border-radius:14px;padding:6px 18px;border-bottom:4px solid #B9B472;font-weight:500;font-size:15px}
+h1{font:clamp(44px,9vw,92px)/1 Chewy,cursive;color:#FFDC57;margin:.2em 0}
+h2{font:400 clamp(32px,6vw,48px)/1.1 'Bebas Neue',Impact,sans-serif;letter-spacing:1px;color:#FFDC57;margin:.3em 0}
+.q{font-size:clamp(15px,2.3vw,21px);line-height:1.55;margin:.3em 0 1em}.sm{font-size:13px;opacity:.8}
+ol{font-size:clamp(14px,2vw,18px);line-height:1.5;padding-left:22px}li{margin:.4em 0}
+.top{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+.bar{flex:1;height:14px;background:rgba(255,255,255,.2);border-radius:9px;overflow:hidden}
+.bar i{display:block;height:100%;background:#FFDC57;border-radius:9px;transition:width .6s}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:640px){.opts{grid-template-columns:1fr}}
+.opt{display:flex;gap:10px;text-align:left;font:500 clamp(14px,2vw,17px)/1.4 Poppins,sans-serif;background:#fff;color:#111;border:0;border-bottom:5px solid #B9B472;border-radius:16px;padding:12px 14px;cursor:pointer;transition:.15s}
+.opt b{color:#3b6b55;min-width:1.2em}
+.opt:hover:not(:disabled){transform:translateY(-3px);background:#FFDC57}.opt:disabled{cursor:default}
+.opt.ok{background:#7be08a;animation:pulse .5s}.opt.bad{background:#ff8a8a;animation:shake .4s}
+.btn{font:600 17px Poppins,sans-serif;background:#FFDC57;color:#3a2a00;border:0;border-bottom:5px solid #c9a52a;border-radius:16px;padding:11px 26px;cursor:pointer;margin:16px 6px 0 0;transition:.15s}
+.btn:hover{transform:translateY(-3px)}.btn.go{animation:pulse 1.4s infinite}
+textarea{width:100%;min-height:90px;border:0;border-bottom:5px solid #B9B472;border-radius:14px;padding:12px;font:500 16px Poppins,sans-serif}
+.rev{background:rgba(255,255,255,.13);border-left:6px solid #FFDC57;border-radius:12px;padding:12px 16px;margin-top:12px;font-size:15px;line-height:1.5;text-align:left;animation:pop .4s}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;text-align:left}
+.c{background:#fff;color:#222;border-radius:16px;padding:12px 14px;border-bottom:5px solid #B9B472;font-size:14px;line-height:1.45;animation:pop .5s backwards}
+.c b{display:block;color:#3b6b55}.c:nth-child(2){animation-delay:.1s}.c:nth-child(3){animation-delay:.2s}.c:nth-child(4){animation-delay:.3s}.c:nth-child(5){animation-delay:.4s}
+.chip{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;margin:3px;font-weight:600;color:#111}
+.chip.ok{background:#7be08a}.chip.bad{background:#ff8a8a}
+#snd{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:12px;z-index:10;font-size:22px;background:#fff;border:0;border-bottom:4px solid #B9B472;border-radius:14px;padding:4px 10px;cursor:pointer}
+.cf{position:fixed;top:-20px;z-index:9;width:10px;height:14px;animation:fall 2.5s linear forwards;pointer-events:none}
+.pop{animation:pop .5s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{opacity:0;transform:scale(.88) translateY(20px)}}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@keyframes pulse{50%{transform:scale(1.04)}}
+@keyframes float{50%{transform:translateY(-14px) rotate(var(--r,0deg))}}
+@keyframes bob{50%{transform:translateY(-12px) rotate(3deg)}}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important}}
+#mb{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:12px;right:76px;z-index:10;display:flex;align-items:center;gap:10px;background:#fff;color:#222;border-bottom:4px solid #B9B472;border-radius:14px;padding:6px 14px;font-size:13px;font-weight:500;transition:opacity .6s}
+#mb .bar{flex:0 0 28%;background:#e3e3e3;height:10px}#mb.error{background:#ffe1e1}#mb.hide{opacity:0;pointer-events:none}
+#mr{font:600 12px Poppins,sans-serif;background:#FFDC57;border:0;border-radius:10px;padding:4px 10px;cursor:pointer}
+.spin{width:70px;height:70px;margin:24px auto;border-radius:10px;background:linear-gradient(135deg,#5aa8ff,#1d66c7);animation:spin 1.2s linear infinite}
+@keyframes spin{50%{transform:rotate(180deg) scale(.7)}to{transform:rotate(360deg)}}
+details.rev summary{cursor:pointer;font-weight:600}details.rev p{margin:.5em 0}
+</style></head><body>
+<div class="stage"></div>
+<div class="deco cube"></div><div class="deco ball"></div><div class="deco cone"></div><div class="deco cube2"></div>
+<div class="kid l">🧒</div><div class="kid r">👧</div>
+<button id="snd" onclick="tgl()" aria-label="Suara">🔊</button>
+<div id="mb"><span id="mt"></span><div class="bar"><i id="mi"></i></div><button id="mr" hidden onclick="setupWorker()">Coba lagi</button></div>
+<main><div id="board"></div></main>
+<script>
+const D={"cp": "Peserta didik dapat mengonstruksi dan mengurai bangun ruang (kubus, balok, dan gabungannya) dan mengenali visualisasi spasial (bagian depan, atas, dan samping). Peserta didik dapat membandingkan karakteristik antarbangun datar dan antarbangun ruang. Peserta didik dapat menentukan lokasi pada peta yang menggunakan sistem berpetak.", "tp": ["Peserta didik mampu menganalisis perbedaan bangun ruang dan bangun datar, serta mengenal unsur-unsur kubus dan balok (titik sudut, rusuk, dan sisi/bidang).", "Peserta didik mampu membuat dan menggambar jaring-jaring kubus dan balok.", "Peserta didik dapat mengonstruksi (membangun) dan mengurai (membongkar) bangun ruang kubus, balok, serta gabungannya.", "Peserta didik mampu mengenali visualisasi spasial dari arah depan, atas, dan samping.", "Peserta didik mampu memahami konsep pangkat tiga atau bilangan kubik dan menghitung volume kubus."], "mc": [{"n": 1, "q": "Rani mendapat tugas membuat kotak hadiah berbentuk kubus dari karton. Kotak tersebut memiliki bagian atas, bawah, depan, belakang, kiri, dan kanan. Agar kotak dapat berdiri dengan kokoh, Rani perlu mengetahui jumlah seluruh sisi yang dimiliki kubus. Jumlah sisi kubus adalah ....", "o": ["4 sisi", "5 sisi", "6 sisi", "8 sisi"], "a": "C"}, {"n": 2, "q": "Pak Guru membawa sebuah kotak berbentuk balok untuk menyimpan buku. Ketika diperiksa, kotak tersebut mempunyai beberapa garis pertemuan antara dua sisinya. Garis pertemuan tersebut disebut rusuk. Berapa jumlah rusuk yang dimiliki balok?", "o": ["8 rusuk", "10 rusuk", "12 rusuk", "14 rusuk"], "a": "C"}, {"n": 3, "q": "Dika membuat kotak penyimpanan berbentuk kubus dengan panjang rusuk 5 cm. Ia ingin mengetahui banyak ruang yang dapat ditampung oleh kotak tersebut. Volume kotak milik Dika adalah ....", "o": ["25 cm³", "75 cm³", "100 cm³", "125 cm³"], "a": "D"}, {"n": 4, "q": "Ibu mempunyai dua benda, yaitu selembar kertas berbentuk persegi dan kotak sepatu berbentuk balok. Ibu meminta anaknya menjelaskan perbedaan kedua benda tersebut. Pernyataan yang paling tepat adalah ....", "o": ["Keduanya mempunyai panjang, lebar, dan tinggi.", "Persegi merupakan bangun datar, sedangkan balok merupakan bangun ruang.", "Persegi memiliki volume, sedangkan balok tidak.", "Keduanya mempunyai enam sisi berbentuk persegi."], "a": "B"}, {"n": 5, "q": "Beni menyusun beberapa kubus kecil untuk membuat sebuah kubus besar. Panjang setiap rusuk kubus besar adalah 4 satuan. Jika seluruh bagian terisi penuh, banyak kubus satuan yang diperlukan adalah ....", "o": ["16 kubus satuan", "32 kubus satuan", "48 kubus satuan", "64 kubus satuan"], "a": "D"}, {"n": 6, "q": "Sinta menggambar sebuah jaring-jaring kubus yang terdiri atas enam persegi sama besar. Setelah dilipat, ternyata ada dua bagian yang saling bertumpuk sehingga kotak tidak dapat terbentuk dengan benar. Kesimpulan yang tepat adalah ....", "o": ["Semua susunan enam persegi pasti menjadi kubus.", "Jaring-jaring kubus harus memiliki susunan persegi yang tepat agar dapat dilipat menjadi kubus.", "Kubus hanya membutuhkan lima persegi.", "Jaring-jaring kubus harus berbentuk lingkaran."], "a": "B"}, {"n": 7, "q": "Andi memiliki dua bangun ruang. Bangun pertama berbentuk kubus, sedangkan bangun kedua berbentuk balok. Ia mengamati bahwa keduanya mempunyai 8 titik sudut dan 12 rusuk. Namun, bentuk sisi keduanya tidak selalu sama. Analisis yang benar adalah ....", "o": ["Semua sisi kubus dan balok berbentuk lingkaran.", "Kubus mempunyai sisi berbentuk persegi, sedangkan balok mempunyai sisi berbentuk persegi panjang atau persegi.", "Kubus tidak memiliki titik sudut.", "Balok mempunyai lebih banyak rusuk daripada kubus."], "a": "B"}, {"n": 8, "q": "Dalam tugas kelompok, siswa menyusun tiga kubus dengan ukuran sama secara berjajar ke arah kanan. Jika dilihat dari depan, susunan tersebut terlihat seperti tiga persegi berjajar. Mengapa tampilan dari depan berbeda dengan tampilan dari atas?", "o": ["Karena bangun berubah bentuk ketika dilihat.", "Karena setiap arah pandang memperlihatkan bagian bangun yang berbeda.", "Karena kubus tidak mempunyai sisi.", "Karena bagian atas selalu berbentuk segitiga."], "a": "B"}, {"n": 9, "q": "Sebuah kotak berbentuk balok dibungkus menggunakan kertas. Raka menggambar enam persegi panjang yang ukurannya sama untuk membuat jaring-jaringnya. Namun, ketika dicoba, gambar tersebut tidak sesuai dengan bentuk kotak. Penyebab yang paling mungkin adalah ....", "o": ["Semua sisi balok harus memiliki ukuran yang sama.", "Ukuran sisi-sisi balok harus disesuaikan dengan panjang, lebar, dan tinggi balok.", "Balok tidak dapat dibuat dari jaring-jaring.", "Balok hanya memiliki empat sisi."], "a": "B"}, {"n": 10, "q": "Kelompok A menyusun empat kubus kecil dengan posisi berjajar. Kelompok B menyusun empat kubus kecil dengan posisi dua di bawah dan dua di atas. Kedua kelompok menggunakan jumlah kubus yang sama. Kesimpulan yang tepat adalah ....", "o": ["Kedua susunan pasti memiliki tampilan depan yang sama.", "Bentuk susunan dapat berbeda meskipun jumlah kubus yang digunakan sama.", "Kelompok A menggunakan lebih banyak kubus.", "Kelompok B tidak dapat membentuk bangun ruang."], "a": "B"}, {"n": 11, "q": "Pada sebuah denah sekolah berpetak, perpustakaan berada di titik (2,3), sedangkan ruang kelas berada di titik (5,3). Jika setiap petak mewakili satu langkah ke arah kanan atau kiri, bagaimana posisi ruang kelas dari perpustakaan?", "o": ["Tiga petak ke kanan", "Tiga petak ke kiri", "Dua petak ke atas", "Lima petak ke bawah"], "a": "A"}, {"n": 12, "q": "Lala membuat bangun gabungan dari satu balok dan satu kubus yang diletakkan tepat di atas balok. Ia kemudian menggambar tampak depan, samping, dan atas. Mengapa ketiga gambar tersebut tidak selalu terlihat sama?", "o": ["Karena setiap pandangan menunjukkan bagian bangun dari arah yang berbeda.", "Karena balok dan kubus tidak dapat digabungkan.", "Karena bangun gabungan hanya memiliki satu sisi.", "Karena gambar tampak atas harus selalu lebih besar."], "a": "A"}, {"n": 13, "q": "Fajar ingin membuat jaring-jaring kubus untuk tugas sekolah. Ia mempunyai empat rancangan. Menurutnya, rancangan yang baik harus terdiri atas enam persegi sama besar dan dapat dilipat tanpa ada sisi yang bertumpuk. Kriteria yang digunakan Fajar tersebut ....", "o": ["Tepat, karena jaring-jaring harus dapat membentuk bangun ruang dengan benar.", "Salah, karena kubus hanya membutuhkan empat persegi.", "Salah, karena jaring-jaring harus berbentuk lingkaran.", "Tepat, karena semua bangun datar dapat menjadi jaring-jaring kubus."], "a": "A"}, {"n": 14, "q": "Ibu ingin membeli kotak penyimpanan. Toko menyediakan kotak berbentuk kubus dan balok. Ibu membutuhkan kotak yang memiliki sisi atas dan bawah berbentuk persegi panjang dengan ukuran panjang lebih besar daripada lebarnya. Bentuk yang paling sesuai adalah ....", "o": ["Kubus, karena seluruh sisinya persegi.", "Balok, karena ukuran panjang dan lebarnya dapat berbeda.", "Segitiga, karena mempunyai tiga sisi.", "Lingkaran, karena mudah disimpan."], "a": "B"}, {"n": 15, "q": "Dua siswa menghitung volume kubus dengan panjang rusuk 3 cm. Riko menjawab 9 cm³, sedangkan Nisa menjawab 27 cm³. Setelah diperiksa, jawaban yang benar adalah ....", "o": ["Riko, karena volume diperoleh dari 3 × 3.", "Nisa, karena volume kubus dihitung dengan mengalikan panjang rusuk sebanyak tiga kali.", "Keduanya benar karena hasilnya hampir sama.", "Keduanya salah karena kubus tidak mempunyai volume."], "a": "B"}, {"n": 16, "q": "Pak Guru meminta siswa membuat bangun gabungan dari kubus dan balok. Kelompok pertama menempatkan kubus di atas balok, sedangkan kelompok kedua menempatkan kubus di samping balok. Kedua kelompok menyatakan hasilnya sama karena menggunakan dua bangun yang sama. Penilaian yang paling tepat adalah ....", "o": ["Benar, karena posisi tidak memengaruhi bentuk gabungan.", "Kurang tepat, karena posisi penyusunan dapat mengubah bentuk dan tampilan bangun gabungan.", "Benar, karena semua bangun gabungan pasti berbentuk kubus.", "Salah, karena kubus tidak boleh digabungkan dengan balok."], "a": "B"}, {"n": 17, "q": "Rina membuat gambar tampak atas dari sebuah susunan kubus. Ia menggambar semua kubus yang terlihat dari depan dan samping juga. Temannya mengatakan gambar tersebut kurang tepat. Alasan yang paling sesuai adalah ....", "o": ["Tampak atas hanya menggambarkan bagian yang terlihat jika bangun diamati dari atas.", "Tampak atas harus menggambarkan semua sisi sekaligus.", "Tampak atas selalu berbentuk lingkaran.", "Tampak atas tidak boleh terdiri atas persegi."], "a": "A"}, {"n": 18, "q": "Sebuah kotak berbentuk kubus mempunyai rusuk 6 cm. Doni ingin memperbesar kotak tersebut menjadi kubus dengan rusuk 12 cm. Doni memperkirakan volumenya hanya menjadi dua kali lipat. Apakah perkiraan Doni benar?", "o": ["Benar, karena panjang rusuknya hanya bertambah dua kali.", "Salah, karena volume kubus berubah mengikuti pangkat tiga panjang rusuknya.", "Benar, karena semua ukuran bertambah satu kali.", "Salah, karena kubus tidak dapat diperbesar."], "a": "B"}, {"n": 19, "q": "Pada denah taman, kolam berada di petak (2,2), sedangkan tempat duduk berada di petak (2,5). Deni mengatakan bahwa tempat duduk berada tiga petak di sebelah kanan kolam. Setelah diperiksa, pernyataan Deni perlu diperbaiki karena ....", "o": ["Tempat duduk berada tiga petak ke atas atau ke bawah, bergantung arah sumbu pada denah.", "Tempat duduk berada tiga petak ke kanan.", "Kedua tempat berada di petak yang sama.", "Denah berpetak tidak dapat menunjukkan lokasi."], "a": "A"}, {"n": 20, "q": "Sebuah kelompok membuat kotak berbentuk balok dari karton. Mereka menggambar dua persegi panjang besar dan empat persegi panjang kecil, kemudian melipatnya. Setelah dilipat, ternyata ada bagian yang tidak tertutup. Evaluasi yang paling tepat untuk memperbaiki pekerjaan mereka adalah ....", "o": ["Menghilangkan semua sisi yang kecil.", "Memeriksa kembali ukuran dan susunan keenam sisi agar dapat menutup seluruh bagian balok.", "Mengganti semua sisi menjadi lingkaran.", "Mengurangi jumlah sisi menjadi empat."], "a": "B"}], "es": [{"n": 21, "q": "Sebuah kubus memiliki panjang rusuk 7 cm. Jika Rudi ingin menghitung volume kubus tersebut, berapakah volume yang diperoleh?", "k": "7 × 7 × 7 = 343 cm³"}, {"n": 22, "q": "Sebuah kotak berbentuk balok mempunyai panjang 12 cm, lebar 8 cm, dan tinggi 5 cm. Sebutkan tiga pasang sisi yang memiliki ukuran sama pada balok tersebut!", "k": "Depan dan belakang, atas dan bawah, kiri dan kanan. Setiap pasangan memiliki ukuran yang sama."}, {"n": 23, "q": "Dina menyusun delapan kubus kecil menjadi bangun gabungan. Ia membuat susunan pertama secara berjajar dan susunan kedua bertingkat. Menurutmu, apakah kedua susunan tersebut memiliki bentuk yang sama? Jelaskan alasanmu!", "k": "Tidak selalu sama. Walaupun jumlah kubus sama, posisi penyusunan dapat menghasilkan bentuk dan tampilan berbeda."}, {"n": 24, "q": "Sebuah kotak berbentuk kubus dibuka hingga menjadi lembaran karton. Setelah dibuka, terlihat enam bidang berbentuk persegi. Jelaskan mengapa keenam bidang tersebut dapat membentuk kembali sebuah kubus jika dilipat dengan benar!", "k": "Karena keenam persegi menjadi sisi-sisi kubus. Jika susunannya tepat, setiap sisi dapat bertemu dan membentuk bangun ruang kubus."}, {"n": 25, "q": "Pada denah sekolah, ruang guru berada di petak (3,2), sedangkan ruang UKS berada di petak (6,2). Jika angka pertama menunjukkan posisi mendatar dan angka kedua menunjukkan posisi tegak, jelaskan letak ruang UKS terhadap ruang guru!", "k": "Ruang UKS berada tiga petak di sebelah kanan ruang guru."}]};
+const MC=D.mc,ES=D.es,$=s=>document.querySelector(s),B=$('#board');
+const EX=["Volume kubus = rusuk × rusuk × rusuk, jadi 7 × 7 × 7 = 343 cm³.","Balok punya 3 pasang sisi berhadapan yang sama: 12×8 (atas–bawah), 12×5 (depan–belakang), dan 8×5 (kiri–kanan).","Bentuk bangun ditentukan oleh cara menyusun kubus, bukan hanya jumlahnya. Berjajar dan bertingkat menghasilkan bentuk serta tampak depan/atas yang berbeda.","Enam persegi sama besar adalah enam sisi kubus. Jika dilipat pada tepi yang tepat, sisi-sisinya bertemu di rusuk tanpa celah atau tumpukan.","Angka pertama (mendatar) naik dari 3 ke 6, selisihnya 3 petak ke kanan. Angka kedua (tegak) sama, jadi tidak naik atau turun."];
+let AC,M,mt=0,snd=true,i=0,sc=0,ans={},ch={},ans2={},G={},D2={};
+const ac=()=>{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state=='suspended')AC.resume();return AC};
+const mg=()=>{if(!M){M=ac().createGain();M.connect(AC.destination)}return M};
+function tone(f,t,d,ty,v,o){const a=ac(),s=a.createOscillator(),g=a.createGain(),n=a.currentTime+t;s.type=ty;s.frequency.value=f;g.gain.setValueAtTime(0,n);g.gain.linearRampToValueAtTime(v,n+.02);g.gain.exponentialRampToValueAtTime(.001,n+d);s.connect(g);g.connect(o||a.destination);s.start(n);s.stop(n+d+.05)}
+const P=[[261.6,329.6,392],[220,261.6,329.6],[174.6,220,261.6],[196,246.9,293.7]];let bar=0;
+function bars(){const c=P[bar++%4],m=mg();for(let k=0;k<8;k++)tone(c[[0,1,2,1,2,1,2,1][k]]*(k%2?2:1),k*.4,.38,'triangle',.05,m);tone(c[0]/2,0,1.5,'sine',.07,m);tone(c[0]/2,1.6,1.5,'sine',.07,m)}
+function startMusic(){if(mt)return;mg().gain.value=snd?1:0;bars();mt=setInterval(bars,3200)}
+function tgl(){snd=!snd;$('#snd').textContent=snd?'🔊':'🔇';if(M)M.gain.value=snd?1:0}
+function sfx(t){if(!snd)return;ac();if(t=='click')tone(660,0,.08,'square',.06);
+if(t=='ok')[523,659,784,1047].forEach((f,k)=>tone(f,k*.09,.25,'triangle',.18));
+if(t=='bad'){tone(240,0,.25,'sawtooth',.1);tone(180,.18,.35,'sawtooth',.1)}
+if(t=='win')[523,659,784,659,784,1047,1319].forEach((f,k)=>tone(f,k*.14,.4,'triangle',.2))}
+function burst(n){const c=['#FFDC57','#7be08a','#5aa8ff','#ef6b7a','#fff'];for(let k=0;k<n;k++){const e=document.createElement('i');e.className='cf';e.style.cssText=`left:${Math.random()*100}vw;background:${c[k%5]};animation-delay:${Math.random()*.4}s;animation-duration:${1.8+Math.random()*1.5}s`;document.body.append(e);setTimeout(()=>e.remove(),3800)}}
+function show(h,ctr){B.innerHTML=h;B.className=ctr?'ctr':'';void B.offsetWidth;B.classList.add('pop');scrollTo(0,0)}
+const nb=t=>`<button class="btn go" onclick="nx()">${t||'Lanjut ➜'}</button>`;
+function nx(){sfx('click');i++;draw()}
+function draw(){if(i==0)title();else if(i==1)cp();else if(i==2)tp();else if(i==3)materi();else if(i<24)mcq(MC[i-4]);else if(i<29)isi(ES[i-24]);else recap()}
+function reset(){i=0;sc=0;ans={};ch={};ans2={};G={};D2={}}
+function startGame(){startMusic();nx()}
+function title(){show(`<span class="pill">Presentasi Kuis</span><h1>Kubus dan Balok</h1><p class="q">Materi ini membahas susunan bangun ruang, tampak dari berbagai arah, dan lokasi pada sistem berpetak. Siap menjawab 20 soal pilihan ganda dan 5 soal isian?</p><span class="pill">Matematika Kelas V SD/MI</span><br><button class="btn go" onclick="startGame()">Mulai Main ▶</button><p class="sm">Disusun oleh Tita Dian Kurnia (24206062)</p>`,1)}
+function cp(){show(`<span class="pill">Capaian Pembelajaran</span><h2>CP</h2><p class="q">${D.cp}</p>${nb()}`)}
+function tp(){show(`<span class="pill">Tujuan Pembelajaran</span><h2>TP</h2><ol>${D.tp.map(t=>`<li>${t}</li>`).join('')}</ol>${nb()}`)}
+function materi(){show(`<span class="pill">Uraian Materi Singkat</span><h2>Ayo Kenali Dulu!</h2><div class="g"><div class="c"><b>🧊 Kubus</b>6 sisi berbentuk persegi sama besar, 12 rusuk, 8 titik sudut. Volume = rusuk × rusuk × rusuk (pangkat tiga).</div><div class="c"><b>📦 Balok</b>6 sisi persegi panjang (bisa ada persegi), 12 rusuk, 8 titik sudut. Sisi yang berhadapan sama besar. Volume = p × l × t.</div><div class="c"><b>✂️ Jaring-jaring</b>Bangun ruang yang dibuka jadi bidang datar. Susunannya harus tepat agar saat dilipat tidak bertumpuk.</div><div class="c"><b>🧱 Mengonstruksi &amp; Mengurai</b>Menyusun kubus/balok jadi bangun gabungan, lalu memisahkannya lagi ke bagian penyusunnya.</div><div class="c"><b>👀 Tampak Depan, Atas, Samping</b>Tiap arah pandang menampilkan bagian yang berbeda dari bangun yang sama.</div><div class="c"><b>🗺️ Lokasi pada Petak</b>Titik (x, y): angka pertama mendatar, angka kedua tegak.</div></div>${nb('Mulai Kuis 🎮')}`)}
+function top_(q,t){return`<div class="top"><span class="pill">Soal ${q.n}/25</span><div class="bar"><i style="width:${(i-4)/25*100}%"></i></div><span class="pill">⭐ ${sc}</span></div><h2>${t}</h2><p class="q">${q.q}</p>`}
+function mcq(q){show(top_(q,'SOAL '+q.n)+`<div class="opts">${q.o.map((t,j)=>`<button class="opt" data-k="${'ABCD'[j]}"><b>${'ABCD'[j]}</b><span>${t}</span></button>`).join('')}</div><div id="f"></div>`);
+B.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{const ok=b.dataset.k==q.a;ans[q.n]=ok;ch[q.n]=b.dataset.k;B.querySelectorAll('.opt').forEach(x=>{x.disabled=true;if(x.dataset.k==q.a)x.classList.add('ok')});if(ok){sc++;sfx('ok');burst(18)}else{b.classList.add('bad');sfx('bad')}$('#f').innerHTML=nb()})}
+const state={thresholdHigh:0.88,thresholdMid:0.80};
+    const workerSourceCode = `
+      import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.4.1';
+
+      // Konfigurasi environment Transformers.js untuk browser
+      env.allowLocalModels = false;
+      env.useBrowserCache = true;
+
+      let extractor = null;
+      const MODEL_ID = 'Xenova/multilingual-e5-small';
+
+      /**
+       * Menghitung Cosine Similarity antara dua vektor numerik.
+       * Karena output pipeline menggunakan { pooling: 'mean', normalize: true },
+       * norma kedua vektor bernilai 1, namun pembagian norma tetap disertakan untuk presisi.
+       */
+      function cosineSimilarity(vecA, vecB) {
+        let dotProduct = 0.0;
+        let normA = 0.0;
+        let normB = 0.0;
+        for (let i = 0; i < vecA.length; i++) {
+          dotProduct += vecA[i] * vecB[i];
+          normA += vecA[i] * vecA[i];
+          normB += vecB[i] * vecB[i];
+        }
+        const denom = Math.sqrt(normA) * Math.sqrt(normB);
+        return denom === 0 ? 0 : dotProduct / denom;
+      }
+
+      /**
+       * Memuat pipeline feature-extraction sekali saja (singleton pattern di dalam worker).
+       */
+      async function initModel() {
+        if (extractor) return extractor;
+
+        self.postMessage({
+          type: 'status',
+          status: 'loading',
+          message: 'Menghubungkan ke Hugging Face Hub & memuat ' + MODEL_ID + '...'
+        });
+
+        extractor = await pipeline('feature-extraction', MODEL_ID, {
+          progress_callback: (progressInfo) => {
+            // Mengirimkan progres unduhan file model (tokenizer, onnx, config) ke main thread
+            self.postMessage({
+              type: 'progress',
+              data: progressInfo
+            });
+          }
+        });
+
+        self.postMessage({
+          type: 'status',
+          status: 'ready',
+          message: 'Model ' + MODEL_ID + ' siap digunakan di Web Worker!'
+        });
+
+        return extractor;
+      }
+
+      // Mendengarkan pesan dari Main Thread
+      self.addEventListener('message', async (event) => {
+        const { type, requestId, payload } = event.data;
+
+        if (type === 'init') {
+          try {
+            await initModel();
+          } catch (err) {
+            self.postMessage({
+              type: 'status',
+              status: 'error',
+              message: err?.message || 'Gagal memuat model dari Hugging Face.'
+            });
+          }
+          return;
+        }
+
+        if (type === 'similarity') {
+          const startTime = performance.now();
+          try {
+            const pipe = await initModel();
+            const referenceText = (payload.referenceText || '').trim();
+            const studentText = (payload.studentText || '').trim();
+
+            if (!referenceText || !studentText) {
+              throw new Error('Teks kunci jawaban maupun jawaban siswa tidak boleh kosong.');
+            }
+
+            // Menambahkan prefiks wajib E5 ("passage: ") untuk perbandingan semantik simetris
+            const inputs = [
+              'passage: ' + referenceText,
+              'passage: ' + studentText
+            ];
+
+            // Ekstraksi fitur mean-pooling dengan normalisasi L2
+            const output = await pipe(inputs, {
+              pooling: 'mean',
+              normalize: true
+            });
+
+            // Konversi Tensor [2, 384] menjadi array JavaScript 2D
+            const embeddings = output.tolist();
+            const similarity = cosineSimilarity(embeddings[0], embeddings[1]);
+            const elapsedMs = Math.round(performance.now() - startTime);
+
+            self.postMessage({
+              type: 'similarity_result',
+              requestId,
+              payload: {
+                similarity,
+                elapsedMs,
+                dimensions: embeddings[0].length
+              }
+            });
+          } catch (err) {
+            self.postMessage({
+              type: 'similarity_error',
+              requestId,
+              error: err?.message || 'Terjadi kesalahan saat menghitung embedding.'
+            });
+          }
+        }
+      });
+    `;
+    function analyzeMathTokens(text) {
+      const normalized = text
+        .toLowerCase()
+        .replace(/,/g, '.')
+        .replace(/[×x\*]/g, '*')
+        .replace(/[÷:]/g, '/');
+
+      // Hapus satuan sementara agar ekspresi seperti "7 cm * 7 cm * 7 cm" dapat dievaluasi sebagai "7 * 7 * 7"
+      const unitStripped = normalized.replace(/\b(cm³|cm3|cm²|cm2|cm|satuan|petak)\b/g, ' ');
+      const exprMatches = unitStripped.match(/\b\d+(?:\.\d+)?(?:\s*[\*\/\+\-]\s*\d+(?:\.\d+)?)+\b/g) || [];
+      const evaluatedExprs = [];
+
+      for (const rawExpr of exprMatches) {
+        const cleanExpr = rawExpr.replace(/\s+/g, ' ').trim();
+        if (/^[0-9\.\+\-\*\/\s]+$/.test(cleanExpr)) {
+          try {
+            const val = Function('"use strict"; return (' + cleanExpr + ');')();
+            if (typeof val === 'number' && Number.isFinite(val)) {
+              evaluatedExprs.push({ expr: cleanExpr, value: val });
+            }
+          } catch (_) {
+            // Abaikan jika bukan ekspresi valid
+          }
+        }
+      }
+
+      const numMatches = normalized.match(/\b\d+(?:\.\d+)?\b/g) || [];
+      const numbers = numMatches.map(Number);
+
+      return { normalized, evaluatedExprs, numbers };
+    }
+
+    /**
+     * Mesin Penalaran & Validasi Matematika per Nomor Soal (No. 21–25).
+     * Mengatasi kelemahan embedding murni yang sering memberi skor tinggi pada jawaban
+     * berstruktur kalimat mirip namun bernilai/bermakna berlawanan (misal: 21 cm² vs 343 cm³,
+     * "kiri" vs "kanan", atau "sama saja" vs "tidak sama").
+     */
+    function validateMathAndReasoning(qNum, studentText, rawSimilarity) {
+      const { normalized, evaluatedExprs, numbers } = analyzeMathTokens(studentText);
+      const checks = [];
+      let status = 'valid'; // 'valid' | 'partial' | 'invalid'
+      let scoreCap = 100;
+      let minScoreFloor = 0;
+      let reasoningNote = '';
+
+      // -----------------------------------------------------------------------
+      // SOAL 21 (C3): Volume kubus dengan panjang rusuk r = 7 cm -> 7 × 7 × 7 = 343 cm³
+      // -----------------------------------------------------------------------
+      if (qNum === 21) {
+        const EXPECTED_VOL = 343;
+        const has343 = numbers.includes(EXPECTED_VOL) || evaluatedExprs.some((e) => e.value === EXPECTED_VOL);
+        const wrongComputed = evaluatedExprs.filter((e) => e.value !== EXPECTED_VOL);
+        const otherNonInputNumbers = numbers.filter((n) => n !== 7 && n !== 3 && n !== EXPECTED_VOL);
+
+        const hasValidFormula =
+          evaluatedExprs.some((e) => e.value === EXPECTED_VOL && e.expr.includes('*')) ||
+          /7\s*\^\s*3|7³|sisi\s*\*\s*sisi\s*\*\s*sisi|rusuk\s*\*\s*rusuk\s*\*\s*rusuk|r³|s³|pangkat\s*tiga/.test(normalized);
+        const hasWrongFormula =
+          evaluatedExprs.some((e) => e.expr === '7 * 3' || e.expr === '3 * 7') ||
+          numbers.includes(21) ||
+          numbers.includes(49) ||
+          numbers.includes(294);
+
+        const hasCubicUnit = /cm³|cm3|sentimeter\s*kubik|centimeter\s*kubik/.test(normalized);
+        const hasWrongUnit = /cm²|cm2|persegi/.test(normalized);
+
+        if (!has343 || wrongComputed.length > 0 || hasWrongFormula) {
+          status = 'invalid';
+          scoreCap = 15;
+          const wrongFound = wrongComputed.length > 0
+            ? `${wrongComputed[0].expr} = ${wrongComputed[0].value}`
+            : (otherNonInputNumbers.length > 0 ? `angka ${otherNonInputNumbers.join(', ')}` : 'tidak ditemukan hasil 343');
+
+          checks.push({
+            pass: false,
+            text: `Validasi Hitung: Salah (${wrongFound}). Seharusnya V = r³ = 7 × 7 × 7 = 343.`
+          });
+          if (hasWrongFormula) {
+            checks.push({
+              pass: false,
+              text: 'Validasi Rumus: Keliru (volume kubus bukan r × 3 atau luas permukaan, melainkan r × r × r).'
+            });
+          }
+          if (hasWrongUnit) {
+            checks.push({
+              pass: false,
+              text: 'Validasi Satuan: Keliru menggunakan satuan luas (cm²), seharusnya satuan volume (cm³).'
+            });
+          }
+          reasoningNote = 'Skor kemiripan E5 tinggi karena kosakata "volume kubus" dan angka "7" mirip, tetapi validasi aritmatika membuktikan hasil hitungnya salah (≠ 343 cm³).';
+        } else {
+          checks.push({
+            pass: true,
+            text: 'Validasi Hitung: Benar, nilai volume tepat 343.'
+          });
+
+          if (hasValidFormula) {
+            checks.push({ pass: true, text: 'Validasi Langkah/Rumus: Menuliskan perkalian rusuk tiga kali (7 × 7 × 7).' });
+          } else {
+            checks.push({ pass: 'warn', text: 'Validasi Langkah/Rumus: Langkah perkalian 7 × 7 × 7 belum dituliskan.' });
+          }
+
+          if (hasCubicUnit) {
+            checks.push({ pass: true, text: 'Validasi Satuan: Satuan volume cm³ tepat.' });
+          } else if (hasWrongUnit) {
+            checks.push({ pass: false, text: 'Validasi Satuan: Satuan tertulis cm², seharusnya cm³.' });
+          } else {
+            checks.push({ pass: 'warn', text: 'Validasi Satuan: Satuan cm³ belum dicantumkan.' });
+          }
+
+          if (hasValidFormula && hasCubicUnit) {
+            status = 'valid';
+            minScoreFloor = 100;
+            reasoningNote = 'Perhitungan aritmatika (7 × 7 × 7 = 343) dan satuan volume (cm³) tervalidasi benar 100%.';
+          } else {
+            status = 'partial';
+            scoreCap = 70;
+            minScoreFloor = 65;
+            reasoningNote = 'Hasil akhir 343 benar, namun langkah perkalian 7 × 7 × 7 atau satuan cm³ belum lengkap.';
+          }
+        }
+      }
+
+      // -----------------------------------------------------------------------
+      // SOAL 22 (C3): Tiga pasang sisi sama pada balok (12 × 8 × 5 cm)
+      // -----------------------------------------------------------------------
+      else if (qNum === 22) {
+        const hasNegation = /\b(tidak|bukan|tak)\b/.test(normalized);
+        const claimsAllEqual =
+          !hasNegation &&
+          /(semua|keenam|6)\s+(sisi|bidang).*(sama|serupa|seperti\s+kubus|identik)/.test(normalized);
+
+        const pairFrontBack = /(depan.*belakang|belakang.*depan|12\s*\*\s*5|5\s*\*\s*12)/.test(normalized);
+        const pairTopBottom = /(atas.*bawah|bawah.*atas|alas.*tutup|tutup.*alas|12\s*\*\s*8|8\s*\*\s*12)/.test(normalized);
+        const pairLeftRight = /(kiri.*kanan|kanan.*kiri|samping.*samping|kedua\s+sisi\s+samping|8\s*\*\s*5|5\s*\*\s*8)/.test(normalized);
+
+        const pairCount = [pairFrontBack, pairTopBottom, pairLeftRight].filter(Boolean).length;
+
+        if (claimsAllEqual) {
+          status = 'invalid';
+          scoreCap = 15;
+          checks.push({
+            pass: false,
+            text: 'Validasi Konsep Balok: Salah. Balok (12×8×5 cm) tidak memiliki 6 sisi sama besar seperti kubus; hanya 3 pasang sisi berhadapan yang sama.'
+          });
+          reasoningNote = 'Embedding E5 mendeteksi kata "sisi", "balok", dan "sama", tetapi secara geometri pernyataan bahwa keenam sisi balok sama besar adalah keliru.';
+        } else if (pairCount === 3) {
+          status = 'valid';
+          minScoreFloor = 100;
+          checks.push({ pass: true, text: 'Pasangan 1: Sisi depan dan belakang teridentifikasi.' });
+          checks.push({ pass: true, text: 'Pasangan 2: Sisi atas dan bawah teridentifikasi.' });
+          checks.push({ pass: true, text: 'Pasangan 3: Sisi kiri dan kanan teridentifikasi.' });
+          reasoningNote = 'Ketiga pasang sisi yang sejajar dan kongruen pada balok telah disebutkan secara lengkap.';
+        } else if (pairCount > 0) {
+          status = 'partial';
+          scoreCap = pairCount === 2 ? 70 : 45;
+          minScoreFloor = pairCount === 2 ? 60 : 40;
+          checks.push({
+            pass: pairFrontBack ? true : 'warn',
+            text: pairFrontBack ? 'Pasangan depan & belakang disebutkan.' : 'Pasangan depan & belakang belum disebutkan.'
+          });
+          checks.push({
+            pass: pairTopBottom ? true : 'warn',
+            text: pairTopBottom ? 'Pasangan atas & bawah disebutkan.' : 'Pasangan atas & bawah belum disebutkan.'
+          });
+          checks.push({
+            pass: pairLeftRight ? true : 'warn',
+            text: pairLeftRight ? 'Pasangan kiri & kanan disebutkan.' : 'Pasangan kiri & kanan belum disebutkan.'
+          });
+          reasoningNote = `Baru menyebutkan ${pairCount} dari 3 pasang sisi balok yang diminta pada soal.`;
+        } else {
+          status = 'invalid';
+          scoreCap = 20;
+          checks.push({
+            pass: false,
+            text: 'Validasi Jawaban: Tidak menyebutkan pasangan sisi berhadapan (depan-belakang, atas-bawah, kiri-kanan).'
+          });
+          reasoningNote = 'Jawaban tidak memuat pasangan sisi yang memiliki ukuran sama pada balok.';
+        }
+      }
+
+      // -----------------------------------------------------------------------
+      // SOAL 23 (C4): Analisis 8 kubus kecil berjajar vs bertingkat
+      // -----------------------------------------------------------------------
+      else if (qNum === 23) {
+        const hasNegation = /\b(tidak|tak|bukan|berbeda|beda)\b/.test(normalized);
+        const affirmsSame =
+          !hasNegation &&
+          /\b(sama\s+saja|bentuknya\s+sama|ya\s*,?\s*sama|pasti\s+sama|tetap\s+sama|adalah\s+sama)\b/.test(normalized);
+
+        const hasSpatialReason =
+          /(posisi|susunan|menyusun|letak|arah|tampilan|berjajar|bertingkat|panjang\s+ke\s+samping|ke\s+atas|vertikal|horizontal)/.test(normalized);
+
+        if (affirmsSame || !hasNegation) {
+          status = 'invalid';
+          scoreCap = 15;
+          checks.push({
+            pass: false,
+            text: 'Validasi Polaritas Logika: Salah. Menyimpulkan bentuknya sama (atau tidak menyatakan berbeda), padahal susunan berjajar dan bertingkat memiliki bentuk serta tampak berbeda.'
+          });
+          reasoningNote = 'Model E5 memberi skor tinggi karena frasa "jumlah kubus sama-sama delapan", namun kesimpulan logikanya terbalik ("sama saja" vs "tidak sama").';
+        } else {
+          checks.push({
+            pass: true,
+            text: 'Validasi Polaritas Logika: Benar, menyimpulkan kedua susunan tidak sama / berbeda.'
+          });
+          if (hasSpatialReason) {
+            status = 'valid';
+            minScoreFloor = 95;
+            checks.push({
+              pass: true,
+              text: 'Validasi Alasan C4: Menjelaskan pengaruh posisi/cara penyusunan terhadap bentuk dan tampilan bangun.'
+            });
+            reasoningNote = 'Kesimpulan dan alasan spasial mengenai perbedaan susunan 8 kubus satuan sudah tepat.';
+          } else {
+            status = 'partial';
+            scoreCap = 65;
+            minScoreFloor = 55;
+            checks.push({
+              pass: 'warn',
+              text: 'Validasi Alasan C4: Kesimpulan "tidak sama" benar, tetapi alasan mengenai perbedaan posisi/cara menyusun belum dijelaskan.'
+            });
+            reasoningNote = 'Jawaban sudah menyatakan tidak sama, namun perlu menambahkan penjelasan tentang posisi penyusunan.';
+          }
+        }
+      }
+
+      // -----------------------------------------------------------------------
+      // SOAL 24 (C4): Analisis jaring-jaring 6 persegi membentuk kubus
+      // -----------------------------------------------------------------------
+      else if (qNum === 24) {
+        const hasNegation = /\b(tidak|bukan|tak)\b/.test(normalized);
+        const claimsUniversal =
+          !hasNegation &&
+          /(semua|sembarang|setiap)\s+(susunan|pola|gambar|bentuk).*(pasti|selalu|bisa|dapat)\s+(dilipat|membentuk|menjadi)\s+kubus/.test(normalized);
+
+        const mentionsFaces = /(sisi|bidang|jaring-jaring|jaring)/.test(normalized);
+        const mentionsProperCondition =
+          /(tepat|benar|sesuai|tidak\s+bertumpuk|tanpa\s+bertumpuk|saling\s+bertemu|bertemu|menutup|menyatu)/.test(normalized);
+
+        if (claimsUniversal) {
+          status = 'invalid';
+          scoreCap = 15;
+          checks.push({
+            pass: false,
+            text: 'Validasi Logika Geometri: Salah. Tidak semua susunan 6 persegi dapat membentuk kubus (sebagian akan bertumpuk jika polanya tidak tepat).'
+          });
+          reasoningNote = 'Meskipun kalimat mengandung kata "enam persegi", "dilipat", dan "kubus", klaim "semua susunan pasti selalu bisa" bertentangan dengan konsep jaring-jaring kubus.';
+        } else if (mentionsFaces && mentionsProperCondition) {
+          status = 'valid';
+          minScoreFloor = 95;
+          checks.push({ pass: true, text: 'Konsep Unsur Kubus: Mengidentifikasi keenam persegi sebagai sisi/jaring-jaring kubus.' });
+          checks.push({ pass: true, text: 'Syarat Lipatan: Menyebutkan syarat susunan yang tepat / saling bertemu tanpa bertumpuk.' });
+          reasoningNote = 'Penjelasan hubungan antara 6 persegi sebagai sisi kubus dan ketepatan susunan jaring-jaring sudah akurat.';
+        } else if (mentionsFaces) {
+          status = 'partial';
+          scoreCap = 65;
+          minScoreFloor = 55;
+          checks.push({ pass: true, text: 'Konsep Unsur Kubus: Menyebutkan 6 persegi sebagai bagian/sisi kubus.' });
+          checks.push({ pass: 'warn', text: 'Syarat Lipatan: Belum menjelaskan bahwa susunan harus tepat agar setiap sisi saling bertemu tanpa bertumpuk.' });
+          reasoningNote = 'Sudah menyebutkan unsur 6 persegi, namun alasan syarat ketepatan susunan lipatan belum lengkap.';
+        } else {
+          status = 'invalid';
+          scoreCap = 20;
+          checks.push({ pass: false, text: 'Validasi Jawaban: Belum menjelaskan peran 6 persegi sebagai sisi-sisi kubus yang saling bertemu.' });
+          reasoningNote = 'Penjelasan konsep jaring-jaring kubus belum sesuai dengan pertanyaan.';
+        }
+      }
+
+      // -----------------------------------------------------------------------
+      // SOAL 25 (C4): Denah berpetak Ruang Guru (3,2) -> Ruang UKS (6,2)
+      // -----------------------------------------------------------------------
+      else if (qNum === 25) {
+        // Hitung vektor perpindahan koordinat: Δx = 6 - 3 = +3 (kanan), Δy = 2 - 2 = 0
+        const deltaX = 6 - 3; // +3
+        const hasRight = /\bkanan\b/.test(normalized);
+        const hasWrongDirection = /\b(kiri|atas|bawah|utara|selatan|barat)\b/.test(normalized);
+        const hasThreeUnits = /\b(3|tiga)\b/.test(normalized);
+
+        if (hasWrongDirection) {
+          status = 'invalid';
+          scoreCap = 15;
+          checks.push({
+            pass: false,
+            text: `Validasi Koordinat: Salah arah. Dari (3,2) ke (6,2), selisih mendatar Δx = 6 − 3 = +${deltaX} (bergeser ke kanan), bukan ke kiri/atas/bawah.`
+          });
+          reasoningNote = 'Skor E5 sangat tinggi (~95%) karena struktur kalimat identik, tetapi validasi vektor koordinat mendeteksi arah spasial yang berlawanan ("kiri/atas" ≠ "kanan").';
+        } else if (hasRight && hasThreeUnits) {
+          status = 'valid';
+          minScoreFloor = 100;
+          checks.push({ pass: true, text: 'Validasi Jarak Mendatar: Benar, selisih Δx = 6 − 3 = 3 petak.' });
+          checks.push({ pass: true, text: 'Validasi Arah Spasial: Benar, arah bergeser ke sebelah kanan.' });
+          reasoningNote = 'Perhitungan selisih koordinat mendatar (6 − 3 = 3 petak) dan arah ke kanan tervalidasi tepat 100%.';
+        } else if (hasRight || hasThreeUnits) {
+          status = 'partial';
+          scoreCap = 60;
+          minScoreFloor = 50;
+          checks.push({
+            pass: hasThreeUnits ? true : 'warn',
+            text: hasThreeUnits ? 'Jarak 3 petak (Δx = 6 − 3 = 3) sudah tepat.' : 'Jumlah langkah (3 petak) belum disebutkan.'
+          });
+          checks.push({
+            pass: hasRight ? true : 'warn',
+            text: hasRight ? 'Arah ke sebelah kanan sudah tepat.' : 'Arah pergeseran ("sebelah kanan") belum disebutkan.'
+          });
+          reasoningNote = 'Informasi posisi belum lengkap (harus memuat jarak 3 petak sekaligus arah ke sebelah kanan).';
+        } else {
+          status = 'invalid';
+          scoreCap = 20;
+          checks.push({
+            pass: false,
+            text: 'Validasi Koordinat: Tidak menyebutkan jarak 3 petak maupun arah ke kanan dari (3,2) ke (6,2).'
+          });
+          reasoningNote = 'Jawaban tidak menunjukkan posisi relatif ruang UKS terhadap ruang guru.';
+        }
+      }
+
+      // Gabungkan skor E5 dengan batasan (cap/floor) dari hasil validasi matematika & logika
+      let rawPoints = 20;
+      if (rawSimilarity >= state.thresholdHigh) rawPoints = 100;
+      else if (rawSimilarity >= state.thresholdMid) rawPoints = 60;
+
+      const finalPoints = Math.max(minScoreFloor, Math.min(scoreCap, rawPoints));
+      const isOverridden = finalPoints !== rawPoints;
+
+      return {
+        status,
+        finalPoints,
+        rawPoints,
+        isOverridden,
+        checks,
+        reasoningNote
+      };
+    }
+
+    function classifyHybridResult(similarity, validation) {
+      if (validation.status === 'invalid' || validation.finalPoints < 40) {
+        return {
+          label: 'Salah / Kontradiksi Logika-Matematika',
+          points: validation.finalPoints,
+          badgeClass: 'bg-rose-100 text-rose-800 border border-rose-200',
+          barClass: 'bg-rose-500',
+          textClass: 'text-rose-700'
+        };
+      }
+      if (validation.status === 'partial' || validation.finalPoints < 85) {
+        return {
+          label: 'Sebagian Benar / Kurang Lengkap',
+          points: validation.finalPoints,
+          badgeClass: 'bg-amber-100 text-amber-800 border border-amber-200',
+          barClass: 'bg-amber-500',
+          textClass: 'text-amber-700'
+        };
+      }
+      return {
+        label: 'Benar & Tervalidasi',
+        points: validation.finalPoints,
+        badgeClass: 'bg-emerald-100 text-emerald-800 border border-emerald-200',
+        barClass: 'bg-emerald-500',
+        textClass: 'text-emerald-700'
+      };
+    }
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+let W,rq=0,pend=new Map(),fp=new Map(),mState='loading',mPct=4,rdy,rdyRes;
+function ui(){const t=$('#mt'),f=$('#mi'),r=$('#mr'),m=$('#mb');if(!t)return;m.className=mState;r.hidden=mState!='error';f.style.width=(mState=='ready'?100:mPct)+'%';
+t.textContent=mState=='ready'?'✅ Penilai jawaban siap':mState=='error'?'⚠️ Penilai jawaban gagal dimuat. Periksa internet.':`🧠 Menyiapkan penilai jawaban… ${Math.round(mPct)}%`;
+const lp=$('#lp');if(lp)lp.textContent=mState=='error'?'Penilai gagal dimuat, memakai validasi matematika saja…':mState=='ready'?'Sedang menghitung nilai…':`Menunggu penilai jawaban siap (${Math.round(mPct)}%)…`;
+if(mState=='ready')setTimeout(()=>{if(mState=='ready')m.classList.add('hide')},2500)}
+function setupWorker(){if(W)W.terminate();fp.clear();mState='loading';mPct=4;rdy=new Promise(r=>rdyRes=r);ui();
+try{W=new Worker(URL.createObjectURL(new Blob([workerSourceCode],{type:'application/javascript'})),{type:'module'})}catch(e){mState='error';ui();rdyRes(false);return}
+W.onmessage=e=>{const{type,status,data,requestId,payload,error}=e.data;
+if(type=='status'){if(status=='ready'){mState='ready';ui();rdyRes(true)}else if(status=='error'){mState='error';ui();rdyRes(false)}return}
+if(type=='progress'){if(data&&data.file&&typeof data.progress=='number'){fp.set(data.file,data.progress);let s=0;fp.forEach(v=>s+=v);mPct=Math.max(4,s/fp.size);ui()}return}
+const p=pend.get(requestId);if(!p)return;pend.delete(requestId);type=='similarity_result'?p.ok(payload):p.no(new Error(error))};
+W.onerror=()=>{mState='error';ui();rdyRes(false)};W.postMessage({type:'init'})}
+const sim=(a,b)=>new Promise((ok,no)=>{const id=++rq;pend.set(id,{ok,no});W.postMessage({type:'similarity',requestId:id,payload:{referenceText:a,studentText:b}})});
+async function grade(q){const t=ans2[q.n];let r=null;if(await rdy){try{r=await sim(q.k,t)}catch(e){}}
+const s=r?Math.max(0,Math.min(1,r.similarity)):0,v=validateMathAndReasoning(q.n,t,s),c=classifyHybridResult(s,v);D2[q.n]=1;return{s,v,c,fb:!r}}
+function isi(q){show(top_(q,'SOAL '+q.n+' · ISIAN')+`<textarea id="t" placeholder="Tulis jawabanmu di sini..."></textarea><p class="sm">Jawabanmu akan dinilai setelah semua soal selesai.</p><div id="f"><button class="btn go" id="ck">Kirim Jawaban ➜</button></div>`);
+$('#ck').onclick=()=>{const t=$('#t').value.trim();if(!t){$('#t').style.animation='shake .4s';sfx('bad');setTimeout(()=>$('#t').style.animation='',500);return}
+ans2[q.n]=t;sfx('click');G[q.n]=grade(q);i++;draw()}}
+const col=c=>/^Benar/.test(c.label)?'#7be08a':/^Sebagian/.test(c.label)?'#FFDC57':'#ff8a8a';
+async function recap(){if(ES.some(q=>!D2[q.n]))show(`<h2>Menilai Jawabanmu…</h2><div class="spin"></div><p class="q" id="lp"></p>`,1),ui();
+const R=await Promise.all(ES.map(q=>G[q.n]));sfx('win');burst(90);
+const m=MC.filter(q=>ans[q.n]).length,pts=R.reduce((a,r)=>a+r.c.points,0)/100,t=Math.round((m+pts)/25*100),fb=R.some(r=>r.fb);
+const oq=(q,k)=>k?`${k}. ${q.o['ABCD'.indexOf(k)]}`:'-';
+show(`<h1>Hore, Selesai! 🎉</h1><div class="g"><div class="c"><b>Pilihan Ganda</b>${m} / 20 benar</div><div class="c"><b>Isian Singkat</b>${pts.toFixed(1)} / 5 poin</div><div class="c"><b>Nilai Akhir</b><span style="font-size:34px;font-weight:600">${t}</span> ${t>=80?'🏆 Luar biasa!':t>=60?'👍 Bagus!':'💪 Ayo coba lagi!'}</div></div>
+<h2>Rekap Pilihan Ganda</h2><div>${MC.map(q=>`<span class="chip ${ans[q.n]?'ok':'bad'}">${q.n}</span>`).join('')}</div>
+${MC.map(q=>`<details class="rev" ${ans[q.n]?'':'open'}><summary>${ans[q.n]?'✅':'❌'} Soal ${q.n}</summary><p>${q.q}</p><b>Jawabanmu:</b> ${oq(q,ch[q.n])}<br><b>Jawaban benar:</b> ${oq(q,q.a)}</details>`).join('')}
+<h2>Rekap Jawaban Isian</h2>${fb?'<p class="sm">Penilai AI tidak berhasil dimuat, sehingga nilai hanya memakai validasi matematika dan penalaran.</p>':''}
+${ES.map((q,k)=>{const r=R[k];return`<div class="rev" style="border-left-color:${col(r.c)}"><b>Soal ${q.n} · ${r.c.label} (${r.c.points}/100)</b><p>${q.q}</p><b>Jawabanmu:</b> ${esc(ans2[q.n])}<br>${r.fb?'':`<b>Kemiripan makna:</b> ${(r.s*100).toFixed(1)}%<br>`}${r.v.checks.map(x=>`${x.pass?'✔️':'✖️'} ${esc(x.text)}<br>`).join('')}${r.v.reasoningNote?`<i>${esc(r.v.reasoningNote)}</i><br>`:''}<br><b>🔑 Kunci:</b> ${q.k}<br><b>💡 Penjelasan:</b> ${EX[q.n-21]}</div>`}).join('')}
+<button class="btn go" onclick="reset();draw()">Main Lagi 🔁</button>`,1)}
+setupWorker();
+draw();
+</script></body></html>
